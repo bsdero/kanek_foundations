@@ -11,7 +11,6 @@ The next functionality would be covered.
 - Configuration files parser
 - Hexadecimal dumps
 - Stack dump display for debugging
-- Cache framework
 
 
 #### 1     Trace and Logging macros 
