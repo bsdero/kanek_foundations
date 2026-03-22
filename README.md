@@ -1,146 +1,256 @@
-# KANEK FOUNDATION LIB (KFL)
-Foundations library for Kanek Storage
+# Kanek Foundation Library (KFL)
 
-This is a group of foundations functions maked for Kanek File system.
-The next functionality would be covered. 
+Foundations library for the Kanek File System (KFS).
 
-- Tracing and logging macros and libraries.
-- Hashing
-- Memory management/Garbage collection
-- Fast 64bit random generator
-- Configuration files parser
-- Hexadecimal dumps
-- Stack dump display for debugging
+KFL provides the low-level building blocks used across KFS: tracing, hashing,
+garbage-collected memory, random number generation, bitmap manipulation,
+variable data types, configuration parsing, hex dumps, and panic/stack dump
+facilities.
 
+The library targets both **user space** (`-DUSER_SPACE`) and **Linux kernel
+space** builds, controlled by a compile-time flag.
 
-#### 1     Trace and Logging macros 
-Trace facilities are just trace messages functionality, for debugging
-and error analysis. Logging just registers in logs important, relevant 
-notification messages. 
-    
-#### 2     Hashing for faster word searches and ordering. 
-In order to make faster string searchs, a hash function which returns
-an unsigned 64-bit integer has been implemented. The 64-bit value
-matches string order, so the hash created by the word "cat" will be
-always lesser than "dog", and both hashes will be lesser than "duck"
-and "pig" respectively. 
+---
 
-#### 3     Garbage Collecting
-This library allows to keep track of garbage collecting, to avoid
-memory leaks. Possibly it can use the cache framework facilities.
+## Modules
 
-#### 4     Fast random 64bit unsigned integers generator
-Code for this does exist already
-    
+| Header | Description |
+|--------|-------------|
+| `trace.h` | Logging and tracing macros with compile-time and runtime level filtering |
+| `hash.h` | Order-preserving 64-bit string hash (`hash_b79`) and xxHash (`xxh32`/`xxh64`) |
+| `gc.h` | Garbage-collected allocator with mark-and-sweep collection |
+| `list.h` | Intrusive doubly-linked list (Linux kernel style) |
+| `map.h` | Bitmap operations — bit/byte set/clear/count/find; foundation for KFS block maps |
+| `krand64.h` | Fast 64-bit PRNG |
+| `var.h` | Dynamic variable types: int, float, bool, string, array, dict |
+| `dict.h` | Python-style hash-map (string keys → `var_t` values) |
+| `panic.h` | Stack dump and panic with backtrace |
+| `kfl_config.h` | Configuration file parser |
+| `utils.h` | String utilities |
+| `dumphex.h` | Hexadecimal memory dump |
 
-#### 5     A configuration files parser.
-The parser should support BASH style comments. Also variables, assignations of 
-Python style arrays, strings, and operators like '=', '+' and '+=".
+---
 
-Support for reserved words like "include" should be added.
-When the parser finds this word, it should proceed to parse the
-specified file, and once it completes that file parsing, continue with
-the current file parsing. 
+## Building
 
-Also support for "display" reserved word should be added, and it
-should display strings, variables and all. 
+All build commands run from `src/`:
 
-The dictionaries facilities descripted in 2.7 should be used for the 
-parser. It should create a whole new dictionary with the key-values 
-parsed from the file. 
+```bash
+cd src
 
-Example of configuration file:
-```
-# this is a conf file
-
-########
-##
-# some comments
-
-
-VARIABLE=123
-MY_SRING="hello world "
-MY_ARRAY=[ 0, 1, 2, 3, "four", "five" ]
-
-MY_VAR0 = MY_ARRAY[0] # should assign 0
-MY_VARS = MY_ARRAY[4] # should assign "four"
-
-############ notice the next operators should be supported
-MY_NEW_STRING = MY_STRING + MY_VARS # it should be a concatenation, the value
-                                    # "hello world four" is expected
-
-MY_NEW_STRING += " six" # it should be a concatenation, and expected
-                        # value is "hello world four six"
-
-MY_NEW_STRING_AGAIN=MY_STRING+" "+"mars"+" "+VARIABLE # should be 
-                                                      # "hello world mars 123"
-
-BANNER2="GOFS FILE SYSTEM"
-
-VERSION="1"
-
-
-# MOST EXAMPLE LINES BELOW
-# default configurations for logging
-DATE_FORMAT="+%m%d%Y_%H%M%S"
-
-# directories of product
-PRODUCT_DIR="/opt/gofs/"
-LOG_DIR=PRODUCT_DIR + "log/"
-CONF_DIR = PRODUCT_DIR + "etc/"
+make          # build libkfl.a + all test binaries
+make clean    # remove all build artifacts
+make runtests # build everything and run all tests
 ```
 
+The static library produced is **`libkfl.a`**. Link against it with `-lkfl`.
 
-#### 6     Hexadecimal dump facilities
-Functions and code already exist for hexadecimal dumps of memory. 
+**Compiler flags:**
+- `-Wall -DUSER_SPACE -g -O0` — warnings on, user-space build, debug symbols
+- `-rdynamic` — included in test binary links so `backtrace_symbols()` resolves function names
+- `-fsanitize=address` / `-static-libasan` can be added to `CFLAGS`/`LDFLAGS` for AddressSanitizer runs (see comment at top of Makefile)
 
-#### 7    Stackdump functionalities
-Functions and code for get the stackdump for debugging purposes is on plan. 
+---
 
+## Module Descriptions
 
-#### 8    Cache Framework
-A simple cache framework is needed to support all the other caches will be 
-added.
+### 1. Trace and Logging
 
-The simple cache framework design will provide generic flags for
-operation, status and a simple posix thread, which will process the 
-cache elements, running operations according with cache elements
-flags. The cache data structure consists on:
-- One list of elements 
-- One list of dirty elements. 
-- Cache operation and status Flags
-- A thread ID
-- A thread mutex
-- Callbacks for the on_map(), on_evict(), on_flush().
+Macros for debug output and error reporting.  All macros automatically embed
+`file:function:line` context.  Compile-time filtering is available via
+`-DTRACE_MIN_LEVEL=TRC_LVL_*`; the default passes all levels.
 
-Each element in the cache will have the next fields:
-- 64bit ID
-- thread mutex
-- flags
-- access count
-- a pointer to the parent cache data structure.
+```c
+TRACE_DBG(fmt, ...)       // debug message → stdout
+TRACE_ERR(fmt, ...)       // error message → stderr
+TRACE_SYSERR(fmt, ...)    // error + errno + strerror → stderr
+TRACE_ERRNO(fmt, ...)     // compact errno report → stderr
+TRACE(file, cls, level, buf, size, fmt, ...)  // runtime-filtered
+```
 
-The framework make a distintion between the cache data structure and
-the cache element data structure. Both are two separated entities. 
-The cache structure interface:
-- Alloc a cache
-- Init cache ( populate cache with default values)
-- Cache disable (flush and evict cache elements, stop thread)
-- Cache enable  ( start thread)
-- Cache sync ( evict all the elements, except pinned elements)
-- Cache pause (pauses thread)
-- Cache unpause
-- Cache wait for flags ( wait for an specific flag)
-- Cache lookup ( look for an element)
+Levels: `TRC_LVL_ALL` → `TRC_LVL_DEBUG` → `TRC_LVL_INFO` → `TRC_LVL_NOTICE`
+→ `TRC_LVL_WARNING` → `TRC_LVL_ERROR` → `TRC_LVL_CRITICAL` → `TRC_LVL_ALERT`
+→ `TRC_LVL_EMERGENCY`
 
-Cache elements:
-- Element map ( map an element into a cache)
-- Mark for eviction
-- Mark dirty
-- element pin
-- element unpin
-- element wait for flags
-- evict 
+### 2. Hashing
 
-So, most of those functions will be exported, some of them may 
-be reimplemented by other caches built above this library. 
+`hash_b79` encodes up to 10 characters into a 64-bit integer that preserves
+lexicographic order — suitable for sorted string lookups, not just equality:
+
+```
+hash_b79("cat") < hash_b79("dog") < hash_b79("duck")
+```
+
+`xxh32` and `xxh64` are the xxHash family — fast, high-quality general-purpose
+hashes used internally for dict bucket selection.
+
+### 3. Garbage Collection
+
+A linked-list allocator that tracks every allocation.  All allocations belong
+to a `gc_list_t` context.  The mark-and-sweep interface lets callers mark nodes
+for collection, then sweep to free them in one pass.
+
+```c
+gc_list_t gc;
+gc_list_init(&gc);
+
+void *p  = gc_malloc(&gc, 64);
+char *s  = gc_strdup(&gc, "hello");
+p        = gc_realloc(&gc, p, 128);
+
+gc_mark(p);        // mark p as garbage
+gc_sweep(&gc);     // free all marked nodes
+
+gc_list_destroy(&gc);  // free everything remaining
+```
+
+### 4. Fast 64-bit PRNG
+
+A fast, non-cryptographic 64-bit pseudo-random number generator.
+
+```c
+set_kseed64(12345);
+uint64_t r = krand64(100);   // 0 ≤ r < 100
+```
+
+### 5. Variable Data Types and Dictionaries
+
+Dynamic typed variables (`var_t`) and Python-style hash-maps (`dict_t`).
+
+Supported types: `VAR_NULL`, `VAR_INT` (int64), `VAR_FLOAT` (double),
+`VAR_BOOL`, `VAR_STR`, `VAR_ARRAY`, `VAR_DICT`.
+
+```c
+gc_list_t gc;
+gc_list_init(&gc);
+
+var_t *i = var_int(&gc, 42);
+var_t *s = var_str(&gc, "hello");
+var_t *a = var_array(&gc);
+var_push(&gc, a, i);
+var_push(&gc, a, s);
+
+var_t *d = var_dict_new(&gc);
+dict_set(d->dict, "key", var_int(&gc, 99));
+
+var_print(a);   // [42, "hello"]
+var_print(d);   // {"key": 99}
+```
+
+Arrays grow dynamically (capacity doubles on overflow).  Dictionaries use a
+64-bucket hash table keyed by `xxh32`.  All allocations are tracked by the
+supplied `gc_list_t`.
+
+### 6. Configuration File Parser
+
+Parses configuration files into a `dict_t` of `var_t` values.  Supports:
+
+- `#` bash-style comments (full-line and inline)
+- Integers, floats, booleans (`true`/`false`), quoted strings
+- Array literals: `MY_ARRAY = [ 0, 1, "two", 3.14 ]`
+- Variable references on the RHS: `COPY = ORIGINAL`
+- Array indexing: `VAL = MY_ARRAY[2]`
+- `+` string concatenation (with automatic type coercion)
+- `+=` append operator
+- `include filename` directive (relative paths, depth-limited)
+- `display expr` directive (prints to stdout during load)
+
+Example config file:
+
+```bash
+# project config
+
+VERSION="1.0"
+PRODUCT_DIR="/opt/myapp/"
+LOG_DIR = PRODUCT_DIR + "log/"
+
+MY_ARRAY = [ 0, 1, 2, "three", "four" ]
+THIRD    = MY_ARRAY[3]          # "three"
+
+BANNER = "MyApp v" + VERSION
+BANNER += " — ready"
+
+include secrets.cfg
+
+display "Loaded " + VERSION
+```
+
+```c
+gc_list_t gc;
+gc_list_init(&gc);
+
+kfl_cfg_t *cfg = kfl_cfg_new(&gc);
+kfl_cfg_load(cfg, "project.cfg");
+
+var_t *v = kfl_cfg_get(cfg, "VERSION");
+printf("%s\n", var_to_str(&gc, v));   // 1.0
+
+gc_list_destroy(&gc);
+```
+
+### 7. Hexadecimal Dumps
+
+Debug utilities for memory inspection.
+
+```c
+dumphex(ptr, size);       // annotated hex + ASCII grid
+dump_uint32(ptr, size);   // 32-bit word table with ASCII
+dump_uint64(ptr, size);   // 64-bit word table with ASCII
+```
+
+### 8. Panic and Stack Dump
+
+For unrecoverable errors.  Prints the message, a full backtrace (user-space
+only, requires `-rdynamic`), then exits with the given return code.
+
+```c
+panic(rc, "disk full");          // print + backtrace + exit(rc)
+PANIC(rc, "unexpected state");   // same, but prepends file:func:line
+
+stackdump(stderr);               // print backtrace only, does not exit
+```
+
+In kernel-space builds (`-DUSER_SPACE` absent) the backtrace is skipped and a
+note is printed instead.
+
+### 9. Bitmap Operations
+
+Bit-level primitives for block and inode allocation maps.
+
+```c
+unsigned char bm[16] = {0};    // 128-bit bitmap, all free
+
+bm_set_bit(bm, 128, 5, SETBIT);         // set bit 5
+bm_set_extent(bm, 128, 10, 8, SETBIT);  // set bits 10–17
+
+uint64_t addr;
+bm_find(bm, 128, 0, 128, 4, &addr);     // find 4 contiguous free bits
+```
+
+---
+
+## Test Programs
+
+| Binary | Tests |
+|--------|-------|
+| `testrand` | `krand64` distribution |
+| `testhash` | `hash_b79`, `xxh32`, `xxh64` |
+| `testdh` | hex dump output |
+| `test_dumphex` | hex dump utilities |
+| `testgc` | garbage collector |
+| `testmap` | bitmap operations |
+| `testvar` | variable types and dictionaries |
+| `testpanic` | panic, PANIC macro, stackdump |
+| `testconfig` | configuration file parser |
+
+Run all tests:
+
+```bash
+cd src && make runtests
+```
+
+---
+
+## License
+
+See `LICENSE`.
