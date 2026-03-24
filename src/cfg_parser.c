@@ -1,10 +1,17 @@
+/*
+ * cfg_parser.c
+ * Configuration file parser implementation for KFL.
+ *
+ * Part of the Kanek Foundation Library (KFL).
+ * KANEK Storage Project.
+ */
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
 #include <stdint.h>
 #include <libgen.h>     /* dirname() */
-#include "kfl_config.h"
+#include "cfg_parser.h"
 #include "utils.h"
 #include "trace.h"
 
@@ -177,7 +184,7 @@ static tok_t peek_tok(lex_t *l){
 
 /* Evaluate a single value atom.  'tok' is the already-consumed lead token. */
 static var_t *eval_atom(lex_t *l, tok_t tok, kfl_cfg_t *cfg){
-    gc_list_t *gc = cfg->gc;
+    ta_list_t *gc = cfg->gc;
 
     switch(tok.type){
 
@@ -254,7 +261,7 @@ static var_t *eval_atom(lex_t *l, tok_t tok, kfl_cfg_t *cfg){
 /* Evaluate:  value ( '+' value )*
  * '+' always performs string concatenation (per spec). */
 static var_t *eval_rhs(lex_t *l, kfl_cfg_t *cfg){
-    gc_list_t *gc = cfg->gc;
+    ta_list_t *gc = cfg->gc;
 
     tok_t tok = next_tok(l);
     if(tok.type == TOK_EOF || tok.type == TOK_HASH)
@@ -274,7 +281,7 @@ static var_t *eval_rhs(lex_t *l, kfl_cfg_t *cfg){
         size_t llen = ls ? strlen(ls) : 0;
         size_t rlen = rs ? strlen(rs) : 0;
 
-        char *buf = gc_malloc(gc, llen + rlen + 1);
+        char *buf = ta_malloc(gc, llen + rlen + 1);
         if(!buf) break;
         if(ls) memcpy(buf,       ls, llen);
         if(rs) memcpy(buf + llen, rs, rlen);
@@ -293,7 +300,7 @@ static var_t *eval_rhs(lex_t *l, kfl_cfg_t *cfg){
 
 static int parse_line(kfl_cfg_t *cfg, const char *raw_line,
                       const char *dir, int depth){
-    gc_list_t *gc = cfg->gc;
+    ta_list_t *gc = cfg->gc;
     char line[CFG_MAX_LINE];
     lex_t l;
 
@@ -376,14 +383,14 @@ static int parse_line(kfl_cfg_t *cfg, const char *raw_line,
     if(op.type == TOK_PLUSEQ){
         /* get existing value (as string), append the new RHS */
         var_t *existing = dict_get(cfg->vars, key);
-        char *es = existing ? var_to_str(gc, existing) : gc_strdup(gc, "");
+        char *es = existing ? var_to_str(gc, existing) : ta_strdup(gc, "");
 
         var_t *rhs = eval_rhs(&l, cfg);
         char *rs = var_to_str(gc, rhs);
 
         size_t elen = es ? strlen(es) : 0;
         size_t rlen = rs ? strlen(rs) : 0;
-        char *buf = gc_malloc(gc, elen + rlen + 1);
+        char *buf = ta_malloc(gc, elen + rlen + 1);
         if(!buf) return -1;
         if(es) memcpy(buf,        es, elen);
         if(rs) memcpy(buf + elen, rs, rlen);
@@ -401,12 +408,12 @@ static int parse_line(kfl_cfg_t *cfg, const char *raw_line,
  * Public API
  * ═══════════════════════════════════════════════════════════════════════════ */
 
-kfl_cfg_t *kfl_cfg_new(gc_list_t *gc){
-    kfl_cfg_t *cfg = gc_malloc(gc, sizeof(kfl_cfg_t));
+kfl_cfg_t *kfl_cfg_new(ta_list_t *gc){
+    kfl_cfg_t *cfg = ta_malloc(gc, sizeof(kfl_cfg_t));
     if(!cfg) return NULL;
     cfg->gc   = gc;
     cfg->vars = dict_new(gc);
-    if(!cfg->vars){ gc_free(cfg); return NULL; }
+    if(!cfg->vars){ ta_free(cfg); return NULL; }
     return cfg;
 }
 

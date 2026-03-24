@@ -3,7 +3,7 @@
 
 #include <stdint.h>
 #include <stddef.h>
-#include "gc.h"
+#include "ta.h"
 
 typedef enum {
     VAR_NULL,
@@ -32,15 +32,15 @@ typedef struct var_t {
 } var_t;
 
 /* constructors */
-var_t *var_int  (gc_list_t *gc, int64_t v);
-var_t *var_float(gc_list_t *gc, double v);
-var_t *var_bool (gc_list_t *gc, int v);
-var_t *var_str  (gc_list_t *gc, const char *s);
-var_t *var_null (gc_list_t *gc);
-var_t *var_array(gc_list_t *gc);
+var_t *var_int  (ta_list_t *gc, int64_t v);
+var_t *var_float(ta_list_t *gc, double v);
+var_t *var_bool (ta_list_t *gc, int v);
+var_t *var_str  (ta_list_t *gc, const char *s);
+var_t *var_null (ta_list_t *gc);
+var_t *var_array(ta_list_t *gc);
 
 /* array operations */
-int    var_push(gc_list_t *gc, var_t *arr, var_t *item);
+int    var_push(ta_list_t *gc, var_t *arr, var_t *item);
 var_t *var_get (var_t *arr, size_t idx);
 size_t var_len (var_t *arr);
 
@@ -51,7 +51,7 @@ int var_is_null(var_t *v);
 int64_t var_to_int  (var_t *v);
 double  var_to_float(var_t *v);
 int     var_to_bool (var_t *v);
-char   *var_to_str  (gc_list_t *gc, var_t *v);  /* result is GC-tracked */
+char   *var_to_str  (ta_list_t *gc, var_t *v);  /* result is TA-tracked */
 
 /* display */
 void var_print(var_t *v);

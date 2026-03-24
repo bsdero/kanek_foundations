@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "gc.h"
+#include "ta.h"
 #include "var.h"
 #include "dict.h"
 
@@ -25,7 +25,7 @@ static void count_cb(const char *key, var_t *val, void *ud){
 
 /* ── test groups ────────────────────────────────────────────────────────── */
 
-static void test_primitives(gc_list_t *gc){
+static void test_primitives(ta_list_t *gc){
     printf("\n[primitives]\n");
 
     var_t *vi = var_int(gc, 42);
@@ -44,7 +44,7 @@ static void test_primitives(gc_list_t *gc){
     CHECK(!var_is_null(vi),                                   "non-null check");
 }
 
-static void test_coercions(gc_list_t *gc){
+static void test_coercions(ta_list_t *gc){
     printf("\n[coercions]\n");
 
     var_t *vi  = var_int(gc, 7);
@@ -84,7 +84,7 @@ static void test_coercions(gc_list_t *gc){
     s = var_to_str(gc, vn);  CHECK(strcmp(s,"null")==0,  "null->str");
 }
 
-static void test_array(gc_list_t *gc){
+static void test_array(ta_list_t *gc){
     printf("\n[array]\n");
 
     var_t *arr = var_array(gc);
@@ -108,7 +108,7 @@ static void test_array(gc_list_t *gc){
     CHECK(var_to_int(var_get(arr, 12)) == 9, "value after realloc");
 }
 
-static void test_dict(gc_list_t *gc){
+static void test_dict(ta_list_t *gc){
     printf("\n[dict]\n");
 
     dict_t *d = dict_new(gc);
@@ -143,7 +143,7 @@ static void test_dict(gc_list_t *gc){
     CHECK(count_iter == 3,               "dict_each visits all entries");
 }
 
-static void test_nested(gc_list_t *gc){
+static void test_nested(ta_list_t *gc){
     printf("\n[nested]\n");
 
     /* array of dicts */
@@ -180,7 +180,7 @@ static void test_nested(gc_list_t *gc){
           "deeply nested value");
 }
 
-static void test_display(gc_list_t *gc){
+static void test_display(ta_list_t *gc){
     printf("\n[display]\n");
 
     dict_t *d = dict_new(gc);
@@ -209,8 +209,8 @@ static void test_display(gc_list_t *gc){
 /* ── main ───────────────────────────────────────────────────────────────── */
 
 int main(void){
-    gc_list_t gc;
-    gc_list_init(&gc);
+    ta_list_t gc;
+    ta_list_init(&gc);
 
     test_primitives(&gc);
     test_coercions(&gc);
@@ -219,7 +219,7 @@ int main(void){
     test_nested(&gc);
     test_display(&gc);
 
-    gc_list_destroy(&gc);
+    ta_list_destroy(&gc);
 
     printf("\n--- RESULTS ---\n");
     printf("PASSED: %d  FAILED: %d\n", passed, failed);

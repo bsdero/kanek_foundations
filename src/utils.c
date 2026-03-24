@@ -1,5 +1,13 @@
+/*
+ * utils.c
+ * String utility functions.
+ *
+ * Part of the Kanek Foundation Library (KFL).
+ * KANEK Storage Project.
+ */
 #include <ctype.h>
 #include <string.h>
+#include "utils.h"
 
 
 
@@ -27,5 +35,28 @@ char *trim (char *s){
   return( s);
 }
 
+int str_starts_with(const char *s, const char *prefix)
+{
+    size_t slen, plen;
 
+    if (s == NULL || prefix == NULL)
+        return 0;
+    slen = strlen(s);
+    plen = strlen(prefix);
+    if (plen > slen)
+        return 0;
+    return strncmp(s, prefix, plen) == 0;
+}
 
+int str_ends_with(const char *s, const char *suffix)
+{
+    size_t slen, sflen;
+
+    if (s == NULL || suffix == NULL)
+        return 0;
+    slen  = strlen(s);
+    sflen = strlen(suffix);
+    if (sflen > slen)
+        return 0;
+    return strncmp(s + slen - sflen, suffix, sflen) == 0;
+}

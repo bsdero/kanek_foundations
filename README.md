@@ -18,16 +18,17 @@ space** builds, controlled by a compile-time flag.
 |--------|-------------|
 | `trace.h` | Logging and tracing macros with compile-time and runtime level filtering |
 | `hash.h` | Order-preserving 64-bit string hash (`hash_b79`) and xxHash (`xxh32`/`xxh64`) |
-| `gc.h` | Garbage-collected allocator with mark-and-sweep collection |
+| `ta.h` | Tracked allocator with mark-and-sweep collection |
 | `list.h` | Intrusive doubly-linked list (Linux kernel style) |
 | `map.h` | Bitmap operations — bit/byte set/clear/count/find; foundation for KFS block maps |
 | `krand64.h` | Fast 64-bit PRNG |
 | `var.h` | Dynamic variable types: int, float, bool, string, array, dict |
 | `dict.h` | Python-style hash-map (string keys → `var_t` values) |
 | `panic.h` | Stack dump and panic with backtrace |
-| `kfl_config.h` | Configuration file parser |
+| `cfg_parser.h` | Configuration file parser |
 | `utils.h` | String utilities |
 | `dumphex.h` | Hexadecimal memory dump |
+| `crc32c.h` | CRC-32C checksum with hardware acceleration (SSE4.2, ARM CRC). Protects all on-disk structs in the KANEK stack. |
 
 ---
 
@@ -84,24 +85,24 @@ hash_b79("cat") < hash_b79("dog") < hash_b79("duck")
 `xxh32` and `xxh64` are the xxHash family — fast, high-quality general-purpose
 hashes used internally for dict bucket selection.
 
-### 3. Garbage Collection
+### 3. Tracked Allocator
 
-A linked-list allocator that tracks every allocation.  All allocations belong
-to a `gc_list_t` context.  The mark-and-sweep interface lets callers mark nodes
+A tracked heap allocator. Every allocation belongs
+to a `ta_list_t` context.  The mark-and-sweep interface lets callers mark nodes
 for collection, then sweep to free them in one pass.
 
 ```c
-gc_list_t gc;
-gc_list_init(&gc);
+ta_list_t gc;
+ta_list_init(&gc);
 
-void *p  = gc_malloc(&gc, 64);
-char *s  = gc_strdup(&gc, "hello");
-p        = gc_realloc(&gc, p, 128);
+void *p  = ta_malloc(&gc, 64);
+char *s  = ta_strdup(&gc, "hello");
+p        = ta_realloc(&gc, p, 128);
 
-gc_mark(p);        // mark p as garbage
-gc_sweep(&gc);     // free all marked nodes
+ta_mark(p);        // mark p as garbage
+ta_sweep(&gc);     // free all marked nodes
 
-gc_list_destroy(&gc);  // free everything remaining
+ta_list_destroy(&gc);  // free everything remaining
 ```
 
 ### 4. Fast 64-bit PRNG
@@ -121,8 +122,8 @@ Supported types: `VAR_NULL`, `VAR_INT` (int64), `VAR_FLOAT` (double),
 `VAR_BOOL`, `VAR_STR`, `VAR_ARRAY`, `VAR_DICT`.
 
 ```c
-gc_list_t gc;
-gc_list_init(&gc);
+ta_list_t gc;
+ta_list_init(&gc);
 
 var_t *i = var_int(&gc, 42);
 var_t *s = var_str(&gc, "hello");
@@ -139,7 +140,7 @@ var_print(d);   // {"key": 99}
 
 Arrays grow dynamically (capacity doubles on overflow).  Dictionaries use a
 64-bucket hash table keyed by `xxh32`.  All allocations are tracked by the
-supplied `gc_list_t`.
+supplied `ta_list_t`.
 
 ### 6. Configuration File Parser
 
@@ -176,8 +177,8 @@ display "Loaded " + VERSION
 ```
 
 ```c
-gc_list_t gc;
-gc_list_init(&gc);
+ta_list_t gc;
+ta_list_init(&gc);
 
 kfl_cfg_t *cfg = kfl_cfg_new(&gc);
 kfl_cfg_load(cfg, "project.cfg");
@@ -185,7 +186,7 @@ kfl_cfg_load(cfg, "project.cfg");
 var_t *v = kfl_cfg_get(cfg, "VERSION");
 printf("%s\n", var_to_str(&gc, v));   // 1.0
 
-gc_list_destroy(&gc);
+ta_list_destroy(&gc);
 ```
 
 ### 7. Hexadecimal Dumps

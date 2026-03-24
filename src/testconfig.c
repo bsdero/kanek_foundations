@@ -1,9 +1,16 @@
+/*
+ * testconfig.c
+ * Tests for the configuration file parser (cfg_parser).
+ *
+ * Part of the Kanek Foundation Library (KFL).
+ * KANEK Storage Project.
+ */
 #include <stdio.h>
 #include <string.h>
 #include <math.h>
-#include "gc.h"
+#include "ta.h"
 #include "var.h"
-#include "kfl_config.h"
+#include "cfg_parser.h"
 
 static int pass = 0, fail = 0;
 
@@ -23,12 +30,12 @@ static int pass = 0, fail = 0;
 #define CHECK_BOOL(v, expected, desc) \
     CHECK((v) && var_to_bool(v) == (expected), desc)
 
-static gc_list_t gc;
+static ta_list_t gc;
 
 int main(void){
     var_t *v;
 
-    gc_list_init(&gc);
+    ta_list_init(&gc);
 
     kfl_cfg_t *cfg = kfl_cfg_new(&gc);
     if(!cfg){
@@ -124,7 +131,7 @@ int main(void){
     printf("\n=== kfl_cfg_print ===\n");
     kfl_cfg_print(cfg);
 
-    gc_list_destroy(&gc);
+    ta_list_destroy(&gc);
 
     printf("\n--- RESULTS ---\n");
     printf("PASSED: %d  FAILED: %d\n", pass, fail);

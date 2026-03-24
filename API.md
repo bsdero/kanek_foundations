@@ -1,8 +1,8 @@
 # KFL API Reference
 
 All public symbols live in `libkfl.a`.  Include the relevant header and link
-with `-lkfl`.  All allocating functions that accept a `gc_list_t *gc` argument
-track their memory in that GC list; call `gc_list_destroy(&gc)` to free
+with `-lkfl`.  All allocating functions that accept a `ta_list_t *gc` argument
+track their memory in that tracked allocator list; call `ta_list_destroy(&gc)` to free
 everything at once.
 
 ---
@@ -11,16 +11,17 @@ everything at once.
 
 1. [Trace — `trace.h`](#1-trace--traceh)
 2. [Hash — `hash.h`](#2-hash--hashh)
-3. [Garbage Collector — `gc.h`](#3-garbage-collector--gch)
+3. [Tracked Allocator — `ta.h`](#3-tracked-allocator--tah)
 4. [Linked List — `list.h`](#4-linked-list--listh)
 5. [Bitmap — `map.h`](#5-bitmap--maph)
 6. [Random Number Generator — `krand64.h`](#6-random-number-generator--krand64h)
 7. [Variable Types — `var.h`](#7-variable-types--varh)
 8. [Dictionary — `dict.h`](#8-dictionary--dicth)
 9. [Panic and Stack Dump — `panic.h`](#9-panic-and-stack-dump--panich)
-10. [Config Parser — `kfl_config.h`](#10-config-parser--kfl_configh)
+10. [Config Parser — `cfg_parser.h`](#10-config-parser--cfg_parserh)
 11. [Utilities — `utils.h`](#11-utilities--utilsh)
 12. [Hex Dump — `dumphex.h`](#12-hex-dump--dumphexh)
+13. [CRC-32C — `crc32c.h`](#13-crc-32c--crc32ch)
 
 ---
 
@@ -142,36 +143,47 @@ xxHash 32-bit variant.  Used internally for dict bucket selection.
 
 ---
 
-## 3. Garbage Collector — `gc.h`
+## 3. Tracked Allocator — `ta.h`
 
-All allocations belong to a `gc_list_t` context (an alias for `gc_node_t`).
+A tracked heap allocator. Every allocation belongs to a `ta_list_t` context.
+All allocations in a context are freed together with `ta_list_destroy()`. Use
+`ta_list_reset()` to reuse a context across repeated operations without
+reallocating the context head.
+
 Allocate the context on the stack or as a struct member, initialise with
-`gc_list_init`, and destroy with `gc_list_destroy`.
+`ta_list_init`, and destroy with `ta_list_destroy`.
 
 ```c
-gc_list_t gc;
-gc_list_init(&gc);
-// ... use gc_malloc, gc_strdup, etc. ...
-gc_list_destroy(&gc);
+ta_list_t gc;
+ta_list_init(&gc);
+// ... use ta_malloc, ta_strdup, etc. ...
+ta_list_destroy(&gc);
 ```
 
 ---
 
 ### Lifecycle
 
-#### `int gc_list_init(gc_list_t *ll)`
-Initialises an empty GC list.  Must be called before any allocation.
+#### `int ta_list_init(ta_list_t *ll)`
+Initialises an empty tracked allocator list.  Must be called before any allocation.
 
 - **Returns** `0`.
 
-#### `void gc_list_destroy(gc_list_t *ll)`
+#### `void ta_list_destroy(ta_list_t *ll)`
 Frees every allocation in `ll` and re-initialises the list head.  After this
 call the list is empty and can be reused.
 
-#### `size_t gc_list_total_mem(gc_list_t *ll)`
+#### `void ta_list_reset(ta_list_t *ll)`
+Frees all allocations in `ll` and re-initialises it **without** freeing the
+list head itself.  Equivalent to `ta_list_destroy()` followed by
+`ta_list_init()` but avoids reallocating the list head.  Use for allocator
+contexts that are reused across many repeated operations (e.g. processing one
+KV lookup in a tight loop) to avoid per-operation list head alloc overhead.
+
+#### `size_t ta_list_total_mem(ta_list_t *ll)`
 Returns the sum of user-data sizes (bytes) of all live nodes in `ll`.
 
-#### `int gc_dump_list(gc_list_t *ll)`
+#### `int ta_dump_list(ta_list_t *ll)`
 Prints a formatted hex dump of every node in `ll` to stdout.  Useful for
 debugging memory layout and tracking individual allocations.
 
@@ -181,50 +193,50 @@ debugging memory layout and tracking individual allocations.
 
 ### Allocation
 
-#### `void *gc_malloc(gc_list_t *ll, size_t size)`
+#### `void *ta_malloc(ta_list_t *ll, size_t size)`
 Allocates `size` bytes tracked by `ll`.  The returned pointer is to the
-user-data area; the GC bookkeeping header is hidden before it.
+user-data area; the TA bookkeeping header is hidden before it.
 
 - **Returns** a pointer to the allocated memory, or `NULL` on failure.
 
-#### `void gc_free(void *p)`
-Frees a single GC-tracked allocation `p` (obtained from any of the `gc_*`
-allocation functions).  Unlinks `p` from its GC list.
+#### `void ta_free(void *p)`
+Frees a single TA-tracked allocation `p` (obtained from any of the `ta_*`
+allocation functions).  Unlinks `p` from its tracked allocator list.
 
-#### `void *gc_realloc(gc_list_t *ll, void *ptr, size_t size)`
-Resizes a GC-tracked allocation.  The old node is unlinked before the `realloc`
+#### `void *ta_realloc(ta_list_t *ll, void *ptr, size_t size)`
+Resizes a TA-tracked allocation.  The old node is unlinked before the `realloc`
 call so the list is never left with a stale pointer.  On failure the original
 allocation is re-linked and returned as valid.
 
 - **Returns** a pointer to the resized memory, or `NULL` on failure (the
   original block remains valid in that case).
 
-#### `void *gc_calloc(gc_list_t *ll, size_t nelements, size_t elementSize)`
+#### `void *ta_calloc(ta_list_t *ll, size_t nelements, size_t elementSize)`
 Allocates `nelements * elementSize` bytes, zero-initialised.
 
 - **Returns** a pointer to the zeroed memory, or `NULL` on failure.
 
-#### `char *gc_strdup(gc_list_t *ll, char *p)`
-Duplicates the string `p` into a new GC-tracked allocation.
+#### `char *ta_strdup(ta_list_t *ll, char *p)`
+Duplicates the string `p` into a new TA-tracked allocation.
 
 - **Returns** the duplicated string, or `NULL` if `p` is `NULL` or allocation fails.
 
-#### `char *gc_strndup(gc_list_t *ll, char *p, int n)`
-Duplicates the first `n` bytes of `p` into a new GC-tracked allocation and
+#### `char *ta_strndup(ta_list_t *ll, char *p, int n)`
+Duplicates the first `n` bytes of `p` into a new TA-tracked allocation and
 null-terminates the result.
 
 - **Returns** the duplicated string, or `NULL` on failure.
 
-#### `char *gc_strncat(gc_list_t *ll, char *p, char *q)`
-Appends string `q` to the GC-tracked string `p` by growing `p` in place via
-`gc_realloc`.  The returned pointer replaces `p` — do not use `p` after this
+#### `char *ta_strncat(ta_list_t *ll, char *p, char *q)`
+Appends string `q` to the TA-tracked string `p` by growing `p` in place via
+`ta_realloc`.  The returned pointer replaces `p` — do not use `p` after this
 call.
 
 - **Returns** the concatenated string, or `NULL` on failure (original `p`
   remains valid).
 
-#### `void *gc_memclone(gc_list_t *ll, void *p, int n)`
-Copies `n` bytes from `p` into a new GC-tracked allocation.
+#### `void *ta_memclone(ta_list_t *ll, void *p, int n)`
+Copies `n` bytes from `p` into a new TA-tracked allocation.
 
 - **Returns** the new copy, or `NULL` on failure.
 
@@ -232,14 +244,14 @@ Copies `n` bytes from `p` into a new GC-tracked allocation.
 
 ### Mark and Sweep
 
-`gc_mark` / `gc_sweep` implement a simple two-phase collection pass.  The
+`ta_mark` / `ta_sweep` implement a simple two-phase collection pass.  The
 convention in KFL is that `mark = 1` means "collect this node".
 
-#### `void gc_mark(void *ptr)`
-Sets the mark flag on the GC node that owns `ptr`.  Marked nodes are freed by
-the next `gc_sweep` call.
+#### `void ta_mark(void *ptr)`
+Sets the mark flag on the TA node that owns `ptr`.  Marked nodes are freed by
+the next `ta_sweep` call.
 
-#### `void gc_sweep(gc_list_t *ll)`
+#### `void ta_sweep(ta_list_t *ll)`
 Frees all nodes in `ll` whose mark flag is set, and unlinks them.  Unmarked
 nodes are left untouched.
 
@@ -247,9 +259,9 @@ nodes are left untouched.
 
 ### Diagnostics
 
-#### `void gc_node_set_trace(void *n, char *str)`
-Stores a short debug label (up to `MAX_DBG_STR_LEN - 1` characters) in the GC
-node that owns `n`.  The label appears in `gc_dump_list` output.
+#### `void ta_node_set_trace(void *n, char *str)`
+Stores a short debug label (up to `MAX_DBG_STR_LEN - 1` characters) in the TA
+node that owns `n`.  The label appears in `ta_dump_list` output.
 
 ---
 
@@ -432,7 +444,7 @@ Returns the next pseudo-random 64-bit value.
 ## 7. Variable Types — `var.h`
 
 A tagged union (`var_t`) supporting seven types.  All constructors allocate
-from a `gc_list_t` and return a GC-tracked pointer.
+from a `ta_list_t` and return a TA-tracked pointer.
 
 ```c
 typedef enum {
@@ -445,24 +457,24 @@ typedef enum {
 
 ### Constructors
 
-#### `var_t *var_null(gc_list_t *gc)`
+#### `var_t *var_null(ta_list_t *gc)`
 Creates a `VAR_NULL` variable.
 
-#### `var_t *var_int(gc_list_t *gc, int64_t v)`
+#### `var_t *var_int(ta_list_t *gc, int64_t v)`
 Creates a `VAR_INT` variable with value `v`.
 
-#### `var_t *var_float(gc_list_t *gc, double v)`
+#### `var_t *var_float(ta_list_t *gc, double v)`
 Creates a `VAR_FLOAT` variable with value `v`.
 
-#### `var_t *var_bool(gc_list_t *gc, int v)`
+#### `var_t *var_bool(ta_list_t *gc, int v)`
 Creates a `VAR_BOOL` variable.  Any non-zero `v` is stored as `1`.
 
-#### `var_t *var_str(gc_list_t *gc, const char *s)`
-Creates a `VAR_STR` variable.  The string is duplicated via `gc_strdup`.
+#### `var_t *var_str(ta_list_t *gc, const char *s)`
+Creates a `VAR_STR` variable.  The string is duplicated via `ta_strdup`.
 `s` may be `NULL`; the stored pointer will be `NULL` (treated as empty on
 coercion).
 
-#### `var_t *var_array(gc_list_t *gc)`
+#### `var_t *var_array(ta_list_t *gc)`
 Creates an empty `VAR_ARRAY` variable.  Initial capacity is 8 elements;
 the backing array doubles on overflow.
 
@@ -470,7 +482,7 @@ the backing array doubles on overflow.
 
 ### Array operations
 
-#### `int var_push(gc_list_t *gc, var_t *arr, var_t *item)`
+#### `int var_push(ta_list_t *gc, var_t *arr, var_t *item)`
 Appends `item` to `arr`.  Grows the backing array if needed.  `item` may be
 `NULL` (stored as a `NULL` slot).
 
@@ -510,8 +522,8 @@ Coerces `v` to `double`.  Strings are parsed with `strtod`.
 Coerces `v` to a boolean.  Zero integers, `0.0`, empty strings, and
 `VAR_NULL` are falsy; everything else is truthy.
 
-#### `char *var_to_str(gc_list_t *gc, var_t *v)`
-Coerces `v` to a GC-tracked string representation.  Arrays and dicts return
+#### `char *var_to_str(ta_list_t *gc, var_t *v)`
+Coerces `v` to a TA-tracked string representation.  Arrays and dicts return
 `"[array]"` and `"{dict}"` respectively.
 
 ---
@@ -529,18 +541,29 @@ infinite loops on circular references.
 
 A hash map with string keys and `var_t *` values.  Implemented as a 64-bucket
 chained hash table using `xxh32` for bucket selection.  All memory is tracked
-by the `gc_list_t` supplied at creation time.
+by the `ta_list_t` supplied at creation time.
 
 ---
 
 ### Lifecycle
 
-#### `dict_t *dict_new(gc_list_t *gc)`
-Creates a new, empty dictionary.
+#### `dict_t *dict_new(ta_list_t *gc)`
+Creates a new, empty dictionary with the default 64-bucket table.
+Equivalent to `dict_new_sized(gc, 64)`.
 
 - **Returns** the new `dict_t`, or `NULL` on allocation failure.
 
-#### `var_t *var_dict_new(gc_list_t *gc)`
+#### `dict_t *dict_new_sized(ta_list_t *gc, uint32_t bucket_count)`
+Creates a new, empty dictionary with `bucket_count` buckets.
+`bucket_count` must be a power of 2 and >= 4.  Use `dict_new()` for
+the default 64-bucket table.  For known entry counts, choose a
+`bucket_count >= ceil(expected_entries / 0.7)` to keep load factor
+below 0.7 for good performance.
+
+- **Returns** the new `dict_t`, or `NULL` on allocation failure or if
+  `bucket_count` is not a power of 2, or if `bucket_count < 4`.
+
+#### `var_t *var_dict_new(ta_list_t *gc)`
 Creates a `VAR_DICT` variable wrapping a new `dict_t`.  Convenient when a
 dictionary needs to be stored as a `var_t` value (e.g. inside another dict
 or array).
@@ -566,7 +589,7 @@ distinguish "not found" from "found with NULL value".
 
 #### `int dict_del(dict_t *d, const char *key)`
 Removes the entry for `key` and frees its key string.  The associated
-`var_t` is not freed here (it remains tracked by the GC list).
+`var_t` is not freed here (it remains tracked by the tracked allocator list).
 
 - **Returns** `0` on success, `-1` if the key was not found.
 
@@ -624,10 +647,10 @@ when the source location is known dynamically.
 
 ---
 
-## 10. Config Parser — `kfl_config.h`
+## 10. Config Parser — `cfg_parser.h`
 
 Parses configuration files into a `dict_t` of `var_t` values, backed by a
-caller-supplied `gc_list_t`.
+caller-supplied `ta_list_t`.
 
 **Supported syntax:**
 
@@ -653,7 +676,7 @@ during loading.
 
 ---
 
-#### `kfl_cfg_t *kfl_cfg_new(gc_list_t *gc)`
+#### `kfl_cfg_t *kfl_cfg_new(ta_list_t *gc)`
 Creates a new, empty config context backed by `gc`.
 
 - **Returns** the new context, or `NULL` on failure.
@@ -688,6 +711,24 @@ string directly; does not allocate.
 
 ---
 
+#### `int str_starts_with(const char *s, const char *prefix)`
+Tests whether string `s` begins with `prefix`.  No dynamic allocation.
+
+- **Returns** `1` if `s` starts with `prefix`, `0` otherwise.
+- **Returns** `0` if either argument is `NULL`.
+- **Returns** `0` if `prefix` is longer than `s`.
+
+---
+
+#### `int str_ends_with(const char *s, const char *suffix)`
+Tests whether string `s` ends with `suffix`.  No dynamic allocation.
+
+- **Returns** `1` if `s` ends with `suffix`, `0` otherwise.
+- **Returns** `0` if either argument is `NULL`.
+- **Returns** `0` if `suffix` is longer than `s`.
+
+---
+
 ## 12. Hex Dump — `dumphex.h`
 
 Debug utilities for printing memory contents.
@@ -706,3 +747,50 @@ and 4-character ASCII (printed in memory order).
 #### `void dump_uint64(void *ptr, size_t size)`
 Prints `size / 8` 64-bit words from `ptr` as a table with index, hex value,
 and 8-character ASCII (printed in memory order).
+
+---
+
+## 13. CRC-32C — `crc32c.h`
+
+CRC-32C (Castagnoli) checksum with hardware acceleration where available.
+Used to protect all on-disk structs in the KANEK stack.
+
+**Hardware acceleration:**
+- x86/x86-64 with SSE4.2: `_mm_crc32_u*` intrinsics
+- ARM/AArch64 with CRC extension: `__crc32c*` intrinsics
+- Falls back to a software lookup table when no hardware support is present.
+
+---
+
+#### `uint32_t kfl_crc32c(uint32_t crc, const void *buf, size_t len)`
+
+Computes the CRC-32C of `len` bytes starting at `buf`.
+
+Uses the standard CRC-32C (iSCSI) convention: the running CRC is XOR'd
+with `0xFFFFFFFF` on entry and on exit, making the function fully composable.
+
+- `crc`: initial value.  Pass `0` for a fresh computation.  Pass the result
+  of a prior call to chain buffers:
+  ```c
+  uint32_t c = kfl_crc32c(0,   buf1, len1);
+  c           = kfl_crc32c(c,   buf2, len2);
+  ```
+  The chained result equals `kfl_crc32c(0, combined_buf, len1 + len2)`.
+
+- **Returns** the CRC-32C of the input.
+
+---
+
+#### `int kfl_crc32c_verify(const void *buf, size_t len)`
+
+Verifies a struct protected by CRC-32C.  The KANEK on-disk convention stores
+the CRC-32C of the first `len - 4` bytes as a little-endian `uint32_t` in the
+last 4 bytes of the struct.
+
+- `buf`: pointer to the struct.
+- `len`: total size of the struct, **including** the 4-byte CRC field.
+
+The stored CRC is read byte-by-byte (safe on unaligned buffers).
+
+- **Returns** `1` if the computed CRC matches the stored value.
+- **Returns** `0` if the data is corrupted, or if `buf` is `NULL` or `len < 4`.

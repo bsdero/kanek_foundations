@@ -25,13 +25,13 @@ All build commands run from `src/`:
 cd src
 
 make          # build library + all tests + all tools
-make tests    # build libkfs.a and test binaries only
-make tools    # build libkfs.a and tool binaries only
+make tests    # build libkfl.a and test binaries only
+make tools    # build libkfl.a and tool binaries only
 make clean    # remove all build artifacts
 make runtests # build everything and run filesystem smoke tests
 ```
 
-The static library produced is `libkfs.a`.
+The static library produced is `libkfl.a`.
 
 **Compiler flags:**
 - `-Wall -DUSER_SPACE -g -O0` — warnings on, user-space build, debug symbols, no optimization
@@ -43,13 +43,14 @@ The static library produced is `libkfs.a`.
 |--------|---------------|-------------|
 | `trace.h` | — | Logging/tracing macros (`TRACE_DBG`, `TRACE_ERR`, `TRACE_SYSERR`, `TRACE_ERRNO`, `TRACE`). Levels: ALL→EMERGENCY |
 | `hash.h` | `hash.c` | `hash_b79()` — order-preserving 64-bit string hash; `xxh64()`/`xxh32()` — xxHash functions |
-| `gc.h` | `gc.c` | Garbage-collected allocator: `gc_malloc`, `gc_free`, `gc_realloc`, `gc_strdup`, `gc_calloc`, `gc_mark`/`gc_sweep` (mark-and-sweep GC) |
+| `ta.h` | `ta.c` | Tracked allocator: `ta_malloc`, `ta_free`, `ta_realloc`, `ta_strdup`, `ta_calloc`, `ta_mark`/`ta_sweep` (mark-and-sweep GC) |
 | `list.h` | — | Intrusive doubly-linked list (Linux kernel style): `list_add`, `list_add_tail`, `list_del`, `list_for_each`, `list_for_each_safe` |
 | `map.h` | `map.c` | Bitmap operations: bit/byte set/clear/count/find-gap (`bm_*` and `byte_*` functions) |
 | `krand64.h` | `krand64.c` | Fast 64-bit PRNG: `set_kseed64(seed)`, `krand64(max)` |
 | `utils.h` | `utils.c` | String utilities: `trim(s)` |
 | — | `dumphex.c` | Hex dump utilities |
-| — | `kfs_config.c` | Configuration file parser |
+| `cfg_parser.h` | `cfg_parser.c` | Configuration file parser |
+| `crc32c.h` | `crc32c.c` | CRC-32C checksum |
 | — | `globals.c` | Global variables |
 
 ## Test Programs
@@ -72,12 +73,12 @@ Run individual tests directly after building, e.g. `./testgc`.
 - C99/GNU C — uses GCC extensions (`typeof`, statement expressions, flexible array members)
 - Header guards: `#ifndef _MODULE_H_` style
 - Kernel-space portability: `#ifdef USER_SPACE` guards swap `<stdint.h>`/`<string.h>` for `<linux/types.h>`/`<linux/string.h>`
-- `container_of` macro (Linux kernel style) used for list navigation in `gc.h`
+- `container_of` macro (Linux kernel style) used for list navigation in `ta.h`
 - All public API functions are declared in the corresponding `.h` file
 
 ## Key Design Notes
 
 - **`hash_b79`** is order-preserving: `hash("cat") < hash("dog") < hash("duck")` — suitable for sorted string lookups, not just equality checks
-- **GC list** (`gc_list_t`) must be initialized with `gc_list_init()` before use and destroyed with `gc_list_destroy()`; all allocations are tracked per-list
+- **tracked allocator list** (`ta_list_t`) must be initialized with `ta_list_init()` before use and destroyed with `ta_list_destroy()`; all allocations are tracked per-list
 - **Bitmap API** (`map.h`) operates on raw `unsigned char *` buffers and is the foundation for KFS block/inode allocation maps
 - **Trace macros** print `file:function:line` context automatically; `TRACE_SYSERR` also prints `errno` and `strerror`

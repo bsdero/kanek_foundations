@@ -1,19 +1,26 @@
-#ifndef _KFL_CONFIG_H_
-#define _KFL_CONFIG_H_
+/*
+ * cfg_parser.h
+ * Configuration file parser for KFL.
+ *
+ * Part of the Kanek Foundation Library (KFL).
+ * KANEK Storage Project.
+ */
+#ifndef _CFG_PARSER_H_
+#define _CFG_PARSER_H_
 
-#include "gc.h"
+#include "ta.h"
 #include "var.h"
 #include "dict.h"
 
 /* Opaque config context.  All allocations are tracked in the GC list
  * supplied to kfl_cfg_new(); destroying that list frees everything. */
 typedef struct {
-    gc_list_t *gc;
+    ta_list_t *gc;
     dict_t    *vars;
 } kfl_cfg_t;
 
 /* Create a new, empty config context backed by 'gc'. */
-kfl_cfg_t *kfl_cfg_new  (gc_list_t *gc);
+kfl_cfg_t *kfl_cfg_new  (ta_list_t *gc);
 
 /* Parse 'filename' and merge its variables into cfg.
  * 'include' directives are resolved relative to the file being parsed.
