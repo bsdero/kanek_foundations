@@ -119,12 +119,12 @@ int bm_extent_can_grow( unsigned char *bm,
 /* ── whole-bitmap utilities ──────────────────────────────────────────── */
 
 /* Clear all bits (mark all as free). */
-void bm_zero(unsigned char *bm, uint64_t total_bits);
+void bm_zero( unsigned char *bm, uint64_t total_bits);
 
 /* Set all bits (mark all as used). */
-void bm_fill(unsigned char *bm, uint64_t total_bits);
+void bm_fill( unsigned char *bm, uint64_t total_bits);
 
 /* Return the total number of set (1) bits in the bitmap. */
-uint64_t bm_popcount(unsigned char *bm, uint64_t total_bits);
+uint64_t bm_popcount( unsigned char *bm, uint64_t total_bits);
 
 #endif

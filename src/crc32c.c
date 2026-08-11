@@ -1,11 +1,5 @@
-/*
- * crc32c.c
- * CRC-32C checksum implementation with hardware acceleration.
- *
- * Part of the Kanek Foundation Library (KFL).
- * KANEK Storage Project.
- */
 #include "crc32c.h"
+#include "trace.h"
 
 #ifdef USER_SPACE
 #include <stdint.h>
@@ -13,7 +7,7 @@
 #include <string.h>
 #endif
 
-/* ─── Software lookup table (Castagnoli, reflected polynomial 0x82F63B78) ── */
+/* ─── Software lookup table (reflected polynomial 0x82F63B78) ──────────── */
 
 /* 256-entry CRC-32C lookup table, generated from poly 0x82F63B78.
  * Each entry is the CRC of a single byte value 0..255. */
@@ -95,89 +89,87 @@ static uint32_t sw_crc32c(
     uint32_t        crc,
     const uint8_t  *buf,
     size_t          len)
-    __attribute__((unused));
+    __attribute__( (unused));
 
 static uint32_t sw_crc32c(
     uint32_t        crc,
     const uint8_t  *buf,
-    size_t          len)
-{
+    size_t          len){
     size_t i;
-    for (i = 0; i < len; i++)
+    for ( i = 0; i < len; i++) {
         crc = crc32c_table[(uint8_t)(crc ^ buf[i])] ^ (crc >> 8);
-    return crc;
+    }
+    return( crc);
 }
 
 /* ─── x86/x86-64 hardware path ─────────────────────────────────────────── */
 
-#if defined(__SSE4_2__) && defined(USER_SPACE)
+#if defined( __SSE4_2__) && defined( USER_SPACE)
 #include <nmmintrin.h>
 
 static uint32_t hw_crc32c_x86(
     uint32_t        crc,
     const uint8_t  *buf,
-    size_t          len)
-{
+    size_t          len){
     /* Process 8 bytes at a time on 64-bit builds. */
-#if defined(__x86_64__) || defined(__amd64__)
-    while (len >= 8) {
+#if defined( __x86_64__) || defined( __amd64__)
+    while ( len >= 8) {
         uint64_t v;
-        memcpy(&v, buf, 8);
-        crc = (uint32_t)_mm_crc32_u64((uint64_t)crc, v);
+        memcpy( &v, buf, 8);
+        crc = (uint32_t)_mm_crc32_u64( (uint64_t)crc, v);
         buf += 8;
         len -= 8;
     }
 #endif
     /* Process 4 bytes at a time. */
-    while (len >= 4) {
+    while ( len >= 4) {
         uint32_t v;
-        memcpy(&v, buf, 4);
-        crc = _mm_crc32_u32(crc, v);
+        memcpy( &v, buf, 4);
+        crc = _mm_crc32_u32( crc, v);
         buf += 4;
         len -= 4;
     }
     /* Remaining bytes one at a time. */
-    while (len > 0) {
-        crc = _mm_crc32_u8(crc, *buf);
+    while ( len > 0) {
+        crc = _mm_crc32_u8( crc, *buf);
         buf++;
         len--;
     }
-    return crc;
+    return( crc);
 }
 #endif /* __SSE4_2__ && USER_SPACE */
 
 /* ─── ARM/AArch64 hardware path ────────────────────────────────────────── */
 
-#if defined(__ARM_FEATURE_CRC32) && defined(USER_SPACE)
+#if defined( __ARM_FEATURE_CRC32) && defined( USER_SPACE)
 #include <arm_acle.h>
 
 static uint32_t hw_crc32c_arm(
     uint32_t        crc,
     const uint8_t  *buf,
-    size_t          len)
-{
-#if defined(__aarch64__)
-    while (len >= 8) {
+    size_t          len){
+#if defined( __aarch64__)
+    while ( len >= 8) {
         uint64_t v;
-        memcpy(&v, buf, 8);
-        crc = __crc32cd(crc, v);
+        memcpy( &v, buf, 8);
+        crc = __crc32cd( crc, v);
         buf += 8;
         len -= 8;
     }
 #endif
-    while (len >= 4) {
+    while ( len >= 4) {
         uint32_t v;
-        memcpy(&v, buf, 4);
-        crc = __crc32cw(crc, v);
+        memcpy( &v, buf, 4);
+        crc = __crc32cw( crc, v);
         buf += 4;
         len -= 4;
     }
-    while (len > 0) {
-        crc = __crc32cb(crc, *buf);
+    while ( len > 0) {
+        crc = __crc32cb( crc, *buf);
         buf++;
         len--;
     }
-    return crc;
+    return( crc);
 }
 #endif /* __ARM_FEATURE_CRC32 && USER_SPACE */
 
@@ -192,23 +184,22 @@ static uint32_t hw_crc32c_arm(
  * kfl_crc32c(0, ab, la+lb).
  * Selects hardware or software path at compile time.
  */
-uint32_t kfl_crc32c(uint32_t crc, const void *buf, size_t len)
-{
+uint32_t kfl_crc32c( uint32_t crc, const void *buf, size_t len){
     const uint8_t *p = (const uint8_t *)buf;
     uint32_t result;
 
     /* Apply standard CRC-32C XOR convention. */
     crc ^= 0xFFFFFFFFU;
 
-#if defined(__SSE4_2__) && defined(USER_SPACE)
-    result = hw_crc32c_x86(crc, p, len);
-#elif defined(__ARM_FEATURE_CRC32) && defined(USER_SPACE)
-    result = hw_crc32c_arm(crc, p, len);
+#if defined( __SSE4_2__) && defined( USER_SPACE)
+    result = hw_crc32c_x86( crc, p, len);
+#elif defined( __ARM_FEATURE_CRC32) && defined( USER_SPACE)
+    result = hw_crc32c_arm( crc, p, len);
 #else
-    result = sw_crc32c(crc, p, len);
+    result = sw_crc32c( crc, p, len);
 #endif
 
-    return result ^ 0xFFFFFFFFU;
+    return( result ^ 0xFFFFFFFFU);
 }
 
 /*
@@ -217,25 +208,26 @@ uint32_t kfl_crc32c(uint32_t crc, const void *buf, size_t len)
  * compares it against a fresh computation of the preceding bytes.
  * Returns 1 if they match, 0 if data is corrupted.
  */
-int kfl_crc32c_verify(const void *buf, size_t len)
-{
+int kfl_crc32c_verify( const void *buf, size_t len){
     uint32_t stored;
     uint32_t computed;
 
-    if (!buf || len < 4)
-        return 0;
+    if ( buf == NULL || len < 4) {
+        TRACE_ERR( "buf is NULL or len < 4");
+        return( 0);
+    }
 
     /* Read stored CRC byte-by-byte (avoid alignment issues). */
-    memcpy(&stored, (const uint8_t *)buf + len - 4, 4);
+    memcpy( &stored, (const uint8_t *)buf + len - 4, 4);
 
     /* stored is in little-endian; convert to host order if needed. */
-#if defined(__BYTE_ORDER__) && (__BYTE_ORDER__ == __ORDER_BIG_ENDIAN__)
+#if defined( __BYTE_ORDER__) && (__BYTE_ORDER__ == __ORDER_BIG_ENDIAN__)
     stored = ((stored & 0xFFU) << 24)
            | (((stored >> 8) & 0xFFU) << 16)
            | (((stored >> 16) & 0xFFU) << 8)
            | ((stored >> 24) & 0xFFU);
 #endif
 
-    computed = kfl_crc32c(0, buf, len - 4);
-    return (computed == stored) ? 1 : 0;
+    computed = kfl_crc32c( 0, buf, len - 4);
+    return( (computed == stored) ? 1 : 0);
 }

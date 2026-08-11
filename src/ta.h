@@ -1,14 +1,3 @@
-/*
- * ta.h
- * Tracked allocator. Tracks heap allocations in a linked list context
- * (ta_list_t). All allocations belonging to a context are freed
- * together with ta_list_destroy(). Use ta_list_reset() to reuse a
- * context across repeated operations without reallocating the context
- * head.
- *
- * Part of the Kanek Foundation Library (KFL).
- * KANEK Storage Project.
- */
 #ifndef _TA_H_
 #define _TA_H_
 
@@ -28,8 +17,8 @@
  */
 #ifndef container_of
 #define container_of(ptr, type, member) ({                      \
-    const typeof( ((type *)0)->member ) *__mptr = (ptr);        \
-    (type *)( (char *)__mptr - offsetof(type,member) );})
+    const typeof( ((type *)0)->member) *__mptr = (ptr);        \
+    (type *)( (char *)__mptr - offsetof( type,member) );})
 #endif
 
 /*
@@ -59,8 +48,8 @@ typedef struct {
 typedef ta_node_t ta_list_t;
 
 /* Lifecycle */
-int     ta_list_init(ta_list_t *ll);
-void    ta_list_destroy(ta_list_t *ll);
+int     ta_list_init( ta_list_t *ll);
+void    ta_list_destroy( ta_list_t *ll);
 
 /*
  * ta_list_reset() - free all allocations and reinitialise the tracked
@@ -73,36 +62,36 @@ void    ta_list_destroy(ta_list_t *ll);
  * operations (e.g. processing one KV lookup in a tight loop) to avoid
  * per-operation list head alloc overhead.
  */
-void    ta_list_reset(ta_list_t *ll);
+void    ta_list_reset( ta_list_t *ll);
 
 /*
  * ta_list_total_mem() - return total tracked bytes.
  * Returns the sum of user-data sizes for all live nodes in ll.
  */
-size_t  ta_list_total_mem(ta_list_t *ll);
+size_t  ta_list_total_mem( ta_list_t *ll);
 
 /*
  * ta_dump_list() - hex-dump every node in the list to stdout.
  * Returns 0.
  */
-int     ta_dump_list(ta_list_t *ll);
+int     ta_dump_list( ta_list_t *ll);
 
 /* Allocation */
-void   *ta_malloc(ta_list_t *ll, size_t size);
-void    ta_free(void *p);
-void   *ta_realloc(ta_list_t *ll, void *ptr, size_t size);
-void   *ta_calloc(ta_list_t *ll, size_t nelements, size_t elementSize);
-char   *ta_strdup(ta_list_t *ll, char *p);
-char   *ta_strndup(ta_list_t *ll, char *p, int n);
-char   *ta_strncat(ta_list_t *ll, char *p, char *q);
-void   *ta_memclone(ta_list_t *ll, void *p, int n);
+void   *ta_malloc( ta_list_t *ll, size_t size);
+void    ta_free( void *p);
+void   *ta_realloc( ta_list_t *ll, void *ptr, size_t size);
+void   *ta_calloc( ta_list_t *ll, size_t nelements, size_t elementSize);
+char   *ta_strdup( ta_list_t *ll, char *p);
+char   *ta_strndup( ta_list_t *ll, char *p, int n);
+char   *ta_strncat( ta_list_t *ll, char *p, char *q);
+void   *ta_memclone( ta_list_t *ll, void *p, int n);
 
 /* Mark and sweep */
-void    ta_mark(void *ptr);
-void    ta_sweep(ta_list_t *ll);
+void    ta_mark( void *ptr);
+void    ta_sweep( ta_list_t *ll);
 
 /* Diagnostics */
-void    ta_node_set_trace(void *n, char *str);
+void    ta_node_set_trace( void *n, char *str);
 
 
 /*
@@ -112,21 +101,21 @@ void    ta_node_set_trace(void *n, char *str);
 typedef ta_node_t  gc_node_t;  /* deprecated: use ta_node_t  */
 typedef ta_list_t  gc_list_t;  /* deprecated: use ta_list_t  */
 
-#define gc_list_init(ll)          ta_list_init(ll)
-#define gc_list_destroy(ll)       ta_list_destroy(ll)
-#define gc_list_total_mem(ll)     ta_list_total_mem(ll)
-#define gc_dump_list(ll)          ta_dump_list(ll)
-#define gc_malloc(ll, sz)         ta_malloc((ll), (sz))
-#define gc_free(p)                ta_free(p)
-#define gc_realloc(ll, ptr, sz)   ta_realloc((ll), (ptr), (sz))
-#define gc_calloc(ll, n, esz)     ta_calloc((ll), (n), (esz))
-#define gc_strdup(ll, p)          ta_strdup((ll), (p))
-#define gc_strndup(ll, p, n)      ta_strndup((ll), (p), (n))
-#define gc_strncat(ll, p, q)      ta_strncat((ll), (p), (q))
-#define gc_memclone(ll, p, n)     ta_memclone((ll), (p), (n))
-#define gc_mark(ptr)              ta_mark(ptr)
-#define gc_sweep(ll)              ta_sweep(ll)
-#define gc_node_set_trace(n, s)   ta_node_set_trace((n), (s))
+#define gc_list_init(ll)          ta_list_init( ll)
+#define gc_list_destroy(ll)       ta_list_destroy( ll)
+#define gc_list_total_mem(ll)     ta_list_total_mem( ll)
+#define gc_dump_list(ll)          ta_dump_list( ll)
+#define gc_malloc(ll, sz)         ta_malloc( (ll), (sz))
+#define gc_free(p)                ta_free( p)
+#define gc_realloc(ll, ptr, sz)   ta_realloc( (ll), (ptr), (sz))
+#define gc_calloc(ll, n, esz)     ta_calloc( (ll), (n), (esz))
+#define gc_strdup(ll, p)          ta_strdup( (ll), (p))
+#define gc_strndup(ll, p, n)      ta_strndup( (ll), (p), (n))
+#define gc_strncat(ll, p, q)      ta_strncat( (ll), (p), (q))
+#define gc_memclone(ll, p, n)     ta_memclone( (ll), (p), (n))
+#define gc_mark(ptr)              ta_mark( ptr)
+#define gc_sweep(ll)              ta_sweep( ll)
+#define gc_node_set_trace(n, s)   ta_node_set_trace( (n), (s))
 
 
 #endif

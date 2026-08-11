@@ -22,7 +22,7 @@ int main(){
     gc_node_set_trace( p, str2);
 
 
-    printf("total=%ld\n", gc_list_total_mem( &gcl));
+    printf( "total=%ld\n", gc_list_total_mem( &gcl));
     gc_dump_list( &gcl);
     gc_free( p);
 
@@ -32,7 +32,7 @@ int main(){
     gc_dump_list( &gcl);
     gc_list_destroy( &gcl);
 
-    return 0;
+    return( 0);
 }
 
 

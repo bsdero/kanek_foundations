@@ -42,46 +42,46 @@ extern trace_t global_trace;
 /* TRACE_DBG — debug info to stdout */
 #if TRC_LVL_DEBUG >= TRACE_MIN_LEVEL
 #define TRACE_DBG(fmt,...) do {                                              \
-    fprintf(stdout, "%s:%s:%d: " fmt "\n",                                  \
+    fprintf( stdout, "%s:%s:%d: " fmt "\n",                                  \
             __FILE__, __FUNCTION__, __LINE__, ##__VA_ARGS__);               \
-    fflush(stdout);                                                          \
-} while(0)
+    fflush( stdout);                                                        \
+} while ( 0)
 #else
-#define TRACE_DBG(fmt,...) do { } while(0)
+#define TRACE_DBG(fmt,...) do { } while ( 0)
 #endif
 
 /* TRACE_ERR — error message to stderr */
 #if TRC_LVL_ERROR >= TRACE_MIN_LEVEL
 #define TRACE_ERR(fmt,...) do {                                              \
-    fprintf(stderr, "ERROR:%s:%s:%d: " fmt "\n",                            \
+    fprintf( stderr, "ERROR:%s:%s:%d: " fmt "\n",                            \
             __FILE__, __FUNCTION__, __LINE__, ##__VA_ARGS__);               \
-    fflush(stderr);                                                          \
-} while(0)
+    fflush( stderr);                                                        \
+} while ( 0)
 #else
-#define TRACE_ERR(fmt,...) do { } while(0)
+#define TRACE_ERR(fmt,...) do { } while ( 0)
 #endif
 
 /* TRACE_SYSERR — error + errno + strerror to stderr */
 #if TRC_LVL_ERROR >= TRACE_MIN_LEVEL
 #define TRACE_SYSERR(fmt,...) do {                                           \
-    fprintf(stderr, "SYSERR:%d:%s:%s:%s:%d: " fmt "\n",                     \
-            errno, strerror(errno),                                          \
+    fprintf( stderr, "SYSERR:%d:%s:%s:%s:%d: " fmt "\n",                     \
+            errno, strerror( errno),                                        \
             __FILE__, __FUNCTION__, __LINE__, ##__VA_ARGS__);               \
-    fflush(stderr);                                                          \
-} while(0)
+    fflush( stderr);                                                        \
+} while ( 0)
 #else
-#define TRACE_SYSERR(fmt,...) do { } while(0)
+#define TRACE_SYSERR(fmt,...) do { } while ( 0)
 #endif
 
 /* TRACE_ERRNO — compact errno report to stderr */
 #if TRC_LVL_ERROR >= TRACE_MIN_LEVEL
 #define TRACE_ERRNO(fmt,...) do {                                            \
-    fprintf(stderr, "ERRNO: %d:%s: " fmt "\n",                              \
-            errno, strerror(errno), ##__VA_ARGS__);                         \
-    fflush(stderr);                                                          \
-} while(0)
+    fprintf( stderr, "ERRNO: %d:%s: " fmt "\n",                              \
+            errno, strerror( errno), ##__VA_ARGS__);                         \
+    fflush( stderr);                                                        \
+} while ( 0)
 #else
-#define TRACE_ERRNO(fmt,...) do { } while(0)
+#define TRACE_ERRNO(fmt,...) do { } while ( 0)
 #endif
 
 
@@ -90,9 +90,9 @@ extern trace_t global_trace;
 /* TRACE_STR — format file:func:line + message into str[size].
  * Uses snprintf so the result is always null-terminated. */
 #define TRACE_STR(str, size, fmt, ...) do {                                  \
-    snprintf((str), (size), "%s:%s:%d: " fmt "\n",                          \
+    snprintf( (str), (size), "%s:%s:%d: " fmt "\n",                          \
              __FILE__, __FUNCTION__, __LINE__, ##__VA_ARGS__);              \
-} while(0)
+} while ( 0)
 
 
 /* ── runtime-filtered macro ──────────────────────────────────────────── */
@@ -110,15 +110,15 @@ extern trace_t global_trace;
  *   fmt,... — printf-style format and arguments
  */
 #define TRACE(file, trc_cls, level, str, size, fmt, ...) do {               \
-    if ((level) >= global_trace.level &&                                     \
+    if ( (level) >= global_trace.level &&                                   \
         ((trc_cls) & global_trace.trc_class) != 0) {                        \
-        TRACE_STR((str), (size), fmt, ##__VA_ARGS__);                       \
-        trace((file), (str));                                                \
+        TRACE_STR( (str), (size), fmt, ##__VA_ARGS__);                       \
+        trace( (file), (str));                                              \
     }                                                                        \
-} while(0)
+} while ( 0)
 
 
 /* Write str to file and flush. Returns 0 on success, -1 on error. */
-int trace(FILE *file, const char *str);
+int trace( FILE *file, const char *str);
 
 #endif

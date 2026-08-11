@@ -1,11 +1,3 @@
-/*
- * krand64.c
- * Fast non-cryptographic 64-bit PRNG: thread-safe global path and
- * reentrant (caller-supplied state) path.
- *
- * Part of the Kanek Foundation Library (KFL).
- * KANEK Storage Project.
- */
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -24,16 +16,19 @@ static pthread_mutex_t _krand64_mtx = PTHREAD_MUTEX_INITIALIZER;
 
 void set_kseed64( uint64_t seed){
 #ifdef USER_SPACE
-    pthread_mutex_init(&_krand64_mtx, NULL);
+    pthread_mutex_lock( &_krand64_mtx);
 #endif
     _kseed64 = seed;
+#ifdef USER_SPACE
+    pthread_mutex_unlock( &_krand64_mtx);
+#endif
 }
 
 uint64_t krand64( uint64_t max){
     uint64_t seed, a, b, c, ac, seed0, seed1, seed2, rc;
 
 #ifdef USER_SPACE
-    pthread_mutex_lock(&_krand64_mtx);
+    pthread_mutex_lock( &_krand64_mtx);
 #endif
 
     a = 0xbadbabe;
@@ -60,18 +55,18 @@ uint64_t krand64( uint64_t max){
 
     rc = (seed0 << 32) | seed1;
 
-    if( max > 0){
+    if ( max > 0){
        rc = rc % max;
     }
 
 #ifdef USER_SPACE
-    pthread_mutex_unlock(&_krand64_mtx);
+    pthread_mutex_unlock( &_krand64_mtx);
 #endif
 
     return( rc);
 }
 
-uint64_t krand64_r(uint64_t *state, uint64_t max){
+uint64_t krand64_r( uint64_t *state, uint64_t max){
     uint64_t seed, a, b, c, ac, seed0, seed1, seed2, rc;
 
     a = 0xbadbabe;
@@ -98,7 +93,7 @@ uint64_t krand64_r(uint64_t *state, uint64_t max){
 
     rc = (seed0 << 32) | seed1;
 
-    if( max > 0){
+    if ( max > 0){
        rc = rc % max;
     }
 

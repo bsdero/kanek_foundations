@@ -9,7 +9,7 @@ CFLAGS  = -Wall -DUSER_SPACE -g -O0
 LIBKFL  = libkfl.a
 # -rdynamic exports all symbols to the dynamic symbol table so that
 # backtrace_symbols() in panic.c can resolve function names at runtime.
-LDFLAGS = -L. -lkfl -rdynamic
+LDFLAGS = -L. -lkfl -rdynamic -lpthread
 
 LIB_OBJS = krand64.o hash.o dumphex.o ta.o map.o utils.o var.o \
            dict.o trace.o panic.o cfg_parser.o crc32c.o
@@ -41,7 +41,7 @@ runtests: tests
 
 # test binaries
 testrand: testrand.o $(LIBKFL)
-	$(CC) -o $@ testrand.o $(LDFLAGS) -lpthread
+	$(CC) -o $@ testrand.o $(LDFLAGS)
 
 testhash: testhash.o $(LIBKFL)
 	$(CC) -o $@ testhash.o $(LDFLAGS)

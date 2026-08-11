@@ -75,6 +75,7 @@ Run individual tests directly after building, e.g. `./testgc`.
 - Kernel-space portability: `#ifdef USER_SPACE` guards swap `<stdint.h>`/`<string.h>` for `<linux/types.h>`/`<linux/string.h>`
 - `container_of` macro (Linux kernel style) used for list navigation in `ta.h`
 - All public API functions are declared in the corresponding `.h` file
+- See `CODING_STYLE.md` for binding rules on control-flow bracing and NULL comparisons
 
 ## Key Design Notes
 

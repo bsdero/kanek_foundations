@@ -36,23 +36,23 @@ dict_t *dict_new  (ta_list_t *gc);
  * Returns the new dict_t, or NULL on allocation failure or invalid
  * bucket_count.
  */
-dict_t *dict_new_sized(ta_list_t *gc, uint32_t bucket_count);
+dict_t *dict_new_sized( ta_list_t *gc, uint32_t bucket_count);
 
 /* CRUD */
 int    dict_set  (dict_t *d, const char *key, var_t *val);
 var_t *dict_get  (dict_t *d, const char *key);
 int    dict_del  (dict_t *d, const char *key);
 int    dict_has  (dict_t *d, const char *key);
-size_t dict_count(dict_t *d);
+size_t dict_count( dict_t *d);
 
 /* iteration */
 typedef void (*dict_iter_fn)(const char *key, var_t *val, void *userdata);
-void dict_each(dict_t *d, dict_iter_fn fn, void *userdata);
+void dict_each( dict_t *d, dict_iter_fn fn, void *userdata);
 
 /* display */
-void dict_print(dict_t *d);
+void dict_print( dict_t *d);
 
 /* creates a VAR_DICT var_t wrapping a new dict_t */
-var_t *var_dict_new(ta_list_t *gc);
+var_t *var_dict_new( ta_list_t *gc);
 
 #endif

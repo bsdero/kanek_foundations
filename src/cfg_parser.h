@@ -1,10 +1,3 @@
-/*
- * cfg_parser.h
- * Configuration file parser for KFL.
- *
- * Part of the Kanek Foundation Library (KFL).
- * KANEK Storage Project.
- */
 #ifndef _CFG_PARSER_H_
 #define _CFG_PARSER_H_
 
@@ -31,6 +24,6 @@ int        kfl_cfg_load (kfl_cfg_t *cfg, const char *filename);
 var_t     *kfl_cfg_get  (kfl_cfg_t *cfg, const char *key);
 
 /* Print all variables to stdout in "KEY = value" form. */
-void       kfl_cfg_print(kfl_cfg_t *cfg);
+void       kfl_cfg_print( kfl_cfg_t *cfg);
 
 #endif

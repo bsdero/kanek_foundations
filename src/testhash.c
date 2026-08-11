@@ -14,18 +14,18 @@ int main(){
     do{
         memset( s, 0, 1020);
         r = fgets( s, 1020, stdin);
-        if( r == NULL){
+        if ( r == NULL){
             break;
         }
 
         h1 = hash_b79( s);
-        h2 = xxh64( s, strlen(s), 1);
-        h3 = xxh32( s, strlen(s), 1);
+        h2 = xxh64( s, strlen( s), 1);
+        h3 = xxh32( s, strlen( s), 1);
 
-        printf("0x%016lx : 0x%016lx : 0x%08x\n", h1, h2, h3);
-    }while(1);
+        printf( "0x%016lx : 0x%016lx : 0x%08x\n", h1, h2, h3);
+    }while ( 1);
 
-    return(0);
+    return( 0);
 }
 
 

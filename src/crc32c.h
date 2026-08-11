@@ -1,10 +1,3 @@
-/*
- * crc32c.h
- * CRC-32C checksum with hardware acceleration.
- *
- * Part of the Kanek Foundation Library (KFL).
- * KANEK Storage Project.
- */
 #ifndef _CRC32C_H_
 #define _CRC32C_H_
 
@@ -48,6 +41,6 @@ uint32_t kfl_crc32c(
  *
  * Returns 1 if the CRC matches, 0 if the data is corrupted.
  */
-int kfl_crc32c_verify(const void *buf, size_t len);
+int kfl_crc32c_verify( const void *buf, size_t len);
 
 #endif

@@ -15,9 +15,9 @@
 
 /* Function that create a "hash" of 10 chars words with low 
  * collisions. */
-uint64_t hash_b79(char *s);
-uint64_t xxh64(const void *input, const size_t len, const uint64_t seed);
-uint32_t xxh32(const void *input, const size_t len, const uint32_t seed);
+uint64_t hash_b79( char *s);
+uint64_t xxh64( const void *input, const size_t len, const uint64_t seed);
+uint32_t xxh32( const void *input, const size_t len, const uint32_t seed);
 
 
 #endif

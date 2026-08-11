@@ -53,39 +53,39 @@ int show_findgap_test_results( int test_id,
     int i;
 
 
-    printf("Expected : ");
-    for( i = 0; i < num_of_results; i+=2){
+    printf( "Expected : ");
+    for ( i = 0; i < num_of_results; i+=2){
         printf( "[%d %lu] ", ercs[i], eaddr[i]);
     }
-    printf("\n");
+    printf( "\n");
 
-    printf("Got :      ");
-    for( i = 0; i < num_of_results; i+=2){
-         printf( "[%d %lu] ", rcs[i], addr[i] );
+    printf( "Got :      ");
+    for ( i = 0; i < num_of_results; i+=2){
+         printf( "[%d %lu] ", rcs[i], addr[i]);
     }
-    printf("\n");
+    printf( "\n");
 
-    for( i = 0; i < num_of_results; i++){
-        if( rcs[i] == ercs[i] && addr[i] == eaddr[i]){
+    for ( i = 0; i < num_of_results; i++){
+        if ( rcs[i] == ercs[i] && addr[i] == eaddr[i]){
             num_of_passed++;
         } else {
             num_of_fails++;
-            printf("Fail in Case #%d : ", i);
-            printf("got=[%d, %lu], expected=[%d, %lu]\n", 
-                    rcs[i], addr[i], ercs[i], eaddr[i] );
+            printf( "Fail in Case #%d : ", i);
+            printf( "got=[%d, %lu], expected=[%d, %lu]\n", 
+                    rcs[i], addr[i], ercs[i], eaddr[i]);
         }
     }
 
 #ifdef DEBUG 
-    printf("DEBUG: num_of_fails=%d\n", num_of_fails);
-    printf("DEBUG: num_of_passed=%d\n", num_of_passed);
+    printf( "DEBUG: num_of_fails=%d\n", num_of_fails);
+    printf( "DEBUG: num_of_passed=%d\n", num_of_passed);
 #endif
-    if( num_of_fails == 0 && num_of_passed == num_of_results){
+    if ( num_of_fails == 0 && num_of_passed == num_of_results){
         test_result = PASSED;
     }
 
     global_results[test_id] = test_result;
-    printf("%s : %s\n\n", tests[test_id], 
+    printf( "%s : %s\n\n", tests[test_id], 
             ( global_results[test_id] ? "FAIL" : "PASSED" ));
 
     return( test_result);
@@ -102,141 +102,141 @@ int show_test_results( int test_id,
     int test_result = FAIL;
     int i;
 
-    for( i = 0; i < num_of_results; i++){
-        if( test_results[i] == expected_results[i]){
+    for ( i = 0; i < num_of_results; i++){
+        if ( test_results[i] == expected_results[i]){
             num_of_passed++;
         } else {
             num_of_fails++;
-            printf("Fail in Case #%d : ", i);
-            printf("got=[%d, 0x%02x], expected=[%d, 0x%02x]\n", 
+            printf( "Fail in Case #%d : ", i);
+            printf( "got=[%d, 0x%02x], expected=[%d, 0x%02x]\n", 
                     test_results[i], test_results[i], 
                     expected_results[i], expected_results[i]);
         }
     }
 
 #ifdef DEBUG 
-    printf("DEBUG: num_of_fails=%d\n", num_of_fails);
-    printf("DEBUG: num_of_passed=%d\n", num_of_passed);
+    printf( "DEBUG: num_of_fails=%d\n", num_of_fails);
+    printf( "DEBUG: num_of_passed=%d\n", num_of_passed);
 #endif
-    if( num_of_fails == 0 && num_of_passed == num_of_results){
+    if ( num_of_fails == 0 && num_of_passed == num_of_results){
         test_result = PASSED;
     }
 
-    if( verbose_mode == 1 || global_results[test_id] == FAIL){
-        if( show_mode == 0){
-            printf("Expected : ");
-            for( i = 0; i < num_of_results; i++){
-                printf("0x%02x ", expected_results[i]);
+    if ( verbose_mode == 1 || global_results[test_id] == FAIL){
+        if ( show_mode == 0){
+            printf( "Expected : ");
+            for ( i = 0; i < num_of_results; i++){
+                printf( "0x%02x ", expected_results[i]);
             }
-            printf("\n");
+            printf( "\n");
 
-            printf("Got :      ");
-            for( i = 0; i < num_of_results; i++){
-                printf("0x%02x ", test_results[i]);
+            printf( "Got :      ");
+            for ( i = 0; i < num_of_results; i++){
+                printf( "0x%02x ", test_results[i]);
             }
-            printf("\n");
-        }else if( show_mode == 1){
-            printf("Expected : ");
-            for( i = 0; i < num_of_results; i+=2){
+            printf( "\n");
+        } else if ( show_mode == 1){
+            printf( "Expected : ");
+            for ( i = 0; i < num_of_results; i+=2){
                 printf( "[%d %d] ", 
                         expected_results[i], 
                         expected_results[i+1]);
             }
-            printf("\n");
+            printf( "\n");
 
-            printf("Got :      ");
-            for( i = 0; i < num_of_results; i+=2){
+            printf( "Got :      ");
+            for ( i = 0; i < num_of_results; i+=2){
                  printf( "[%d %d] ", 
                         test_results[i], 
                         test_results[i+1]);
             }
-            printf("\n");
-        }else if( show_mode == 2){
-            printf("Expected map: [ ");
-            for( i = 0; i < 8; i++){
-                printf( "0x%02x ", expected_results[i] );
+            printf( "\n");
+        } else if ( show_mode == 2){
+            printf( "Expected map: [ ");
+            for ( i = 0; i < 8; i++){
+                printf( "0x%02x ", expected_results[i]);
             }
-            printf("\n                ");
-            for( i = 8; i < 16; i++){
-                printf( "0x%02x ", expected_results[i] );
+            printf( "\n                ");
+            for ( i = 8; i < 16; i++){
+                printf( "0x%02x ", expected_results[i]);
             }
-            printf("]\n");
-            printf("Expected return codes: [ ");
-            for( ; i < 24; i++){
+            printf( "]\n");
+            printf( "Expected return codes: [ ");
+            for ( ; i < 24; i++){
                  printf( "%02d", expected_results[i]);
-                 if( i < 23){
-                    printf(", ");    
+                 if ( i < 23){
+                    printf( ", ");    
                  }
             }
-            printf(" ]\n");
-            printf("Results map:  [ ");
-            for( i = 0; i < 8; i++){
-                printf( "0x%02x ", test_results[i] );
+            printf( " ]\n");
+            printf( "Results map:  [ ");
+            for ( i = 0; i < 8; i++){
+                printf( "0x%02x ", test_results[i]);
             }
-            printf("\n                ");
-            for( i = 8; i < 16; i++){
-                printf( "0x%02x ", test_results[i] );
+            printf( "\n                ");
+            for ( i = 8; i < 16; i++){
+                printf( "0x%02x ", test_results[i]);
             }
-            printf("]\n");
-            printf("Results return codes:  [ ");
-            for( ; i < 24; i++){
+            printf( "]\n");
+            printf( "Results return codes:  [ ");
+            for ( ; i < 24; i++){
                 printf( "%02d", test_results[i]);
-                if( i < 23){
-                    printf(", ");    
+                if ( i < 23){
+                    printf( ", ");    
                 }
             }
-            printf(" ]\n");
-        }else if( show_mode == 3){
-            printf("Expected map: [ ");
-            for( i = 0; i < 8; i++){
-                printf( "0x%02x ", expected_results[i] );
+            printf( " ]\n");
+        } else if ( show_mode == 3){
+            printf( "Expected map: [ ");
+            for ( i = 0; i < 8; i++){
+                printf( "0x%02x ", expected_results[i]);
             }
-            printf("\n                ");
-            for( i = 8; i < 16; i++){
-                printf( "0x%02x ", expected_results[i] );
+            printf( "\n                ");
+            for ( i = 8; i < 16; i++){
+                printf( "0x%02x ", expected_results[i]);
             }
-            printf("]\n");
-            printf("Expected return codes: [ ");
-            for( ; i < 28; i++){
+            printf( "]\n");
+            printf( "Expected return codes: [ ");
+            for ( ; i < 28; i++){
                  printf( "%02d", expected_results[i]);
-                 if( i < 27){
-                    printf(", ");    
+                 if ( i < 27){
+                    printf( ", ");    
                  }
             }
-            printf(" ]\n");
-            printf("Results map:  [ ");
-            for( i = 0; i < 8; i++){
-                printf( "0x%02x ", test_results[i] );
+            printf( " ]\n");
+            printf( "Results map:  [ ");
+            for ( i = 0; i < 8; i++){
+                printf( "0x%02x ", test_results[i]);
             }
-            printf("\n                ");
-            for( i = 8; i < 16; i++){
-                printf( "0x%02x ", test_results[i] );
+            printf( "\n                ");
+            for ( i = 8; i < 16; i++){
+                printf( "0x%02x ", test_results[i]);
             }
-            printf("]\n");
-            printf("Results return codes:  [ ");
-            for( ; i < 28; i++){
+            printf( "]\n");
+            printf( "Results return codes:  [ ");
+            for ( ; i < 28; i++){
                 printf( "%02d", test_results[i]);
-                if( i < 27){
-                    printf(", ");    
+                if ( i < 27){
+                    printf( ", ");    
                 }
             }
-            printf(" ]\n");
-        }else if( show_mode == 4){
-            printf("Expected : ");
-            for( i = 0; i < num_of_results; i++){
-                printf("%02d ", expected_results[i]);
+            printf( " ]\n");
+        } else if ( show_mode == 4){
+            printf( "Expected : ");
+            for ( i = 0; i < num_of_results; i++){
+                printf( "%02d ", expected_results[i]);
             }
-            printf("\n");
+            printf( "\n");
 
-            printf("Got :      ");
-            for( i = 0; i < num_of_results; i++){
-                printf("%02d ", test_results[i]);
+            printf( "Got :      ");
+            for ( i = 0; i < num_of_results; i++){
+                printf( "%02d ", test_results[i]);
             }
-            printf("\n");
+            printf( "\n");
         }
     }
     global_results[test_id] = test_result;
-    printf("%s : %s\n\n", tests[test_id], 
+    printf( "%s : %s\n\n", tests[test_id], 
             ( global_results[test_id] ? "FAIL" : "PASSED" ));
 
 
@@ -276,8 +276,8 @@ int main(){
      */
     int e_results_1[8] = { 0x01, 0x03, 0x0f, 0x7f, 0xff, 0xff, 0x04, 0x0c };
     int a_results[32];
-    if( verbose_mode == 1){
-        printf("Test #%d: %s\n", test_id, tests[test_id]);
+    if ( verbose_mode == 1){
+        printf( "Test #%d: %s\n", test_id, tests[test_id]);
     }
 
 
@@ -290,7 +290,7 @@ int main(){
     bresult[6] = byte_set_bits( 2, 1, 0x00, 1);
     bresult[7] = byte_set_bits( 2, 2, 0x00, 1);
 
-    for( i = 0; i < 8; i++){
+    for ( i = 0; i < 8; i++){
         a_results[i] = (int) bresult[i];
     }
 
@@ -301,8 +301,8 @@ int main(){
      * SetBits in byte #2
      */
     int e_results_2[8] = { 0xfe, 0xfc, 0xf0, 0x80, 0x00, 0x00, 0xfb, 0xf3};
-    if( verbose_mode == 1){
-        printf("%d: %s\n", test_id, tests[test_id]);
+    if ( verbose_mode == 1){
+        printf( "%d: %s\n", test_id, tests[test_id]);
     }
 
     bresult[0] = byte_set_bits( 0, 1, 0xff, 0);
@@ -314,7 +314,7 @@ int main(){
     bresult[6] = byte_set_bits( 2, 1, 0xff, 0);
     bresult[7] = byte_set_bits( 2, 2, 0xff, 0);
  
-    for( i = 0; i < 8; i++){
+    for ( i = 0; i < 8; i++){
         a_results[i] = (int) bresult[i];
     }
 
@@ -337,8 +337,8 @@ int main(){
      * CountBits in byte #1
      */
     int e_results_3[8] = { 8, 0, 1, 0, 6, 0, 1, 0 };
-    if( verbose_mode == 1){
-        printf("Test #%d: %s\n", test_id, tests[test_id]);
+    if ( verbose_mode == 1){
+        printf( "Test #%d: %s\n", test_id, tests[test_id]);
     }
 
     iresult[0] = byte_count_bits( 0, 8, 0x00, 0);
@@ -358,8 +358,8 @@ int main(){
      * CountBits in byte #2 
      */
     int e_results_4[8] = { 0, 8, 0, 1, 0, 6, 0, 1 };
-    if( verbose_mode == 1){
-        printf("Test #%d: %s\n", test_id, tests[test_id]);
+    if ( verbose_mode == 1){
+        printf( "Test #%d: %s\n", test_id, tests[test_id]);
     }
 
     iresult[0] = byte_count_bits( 0, 8, 0xff, 0);
@@ -379,8 +379,8 @@ int main(){
      * CountBits in byte #3 
      */
     int e_results_5[8] = { 0, 4, 0, 1, 0, 2, 0, 1 };
-    if( verbose_mode == 1){
-        printf("Test #%d: %s\n", test_id, tests[test_id]);
+    if ( verbose_mode == 1){
+        printf( "Test #%d: %s\n", test_id, tests[test_id]);
     }
 
     iresult[0] = byte_count_bits( 0, 8, 0x0f, 0);
@@ -400,8 +400,8 @@ int main(){
      * CountBits in byte #4 
      */
     int e_results_6[8] = { 4, 0, 1, 0, 2, 0, 1, 0 };
-    if( verbose_mode == 1){
-        printf("Test #%d: %s\n", test_id, tests[test_id]);
+    if ( verbose_mode == 1){
+        printf( "Test #%d: %s\n", test_id, tests[test_id]);
     }
 
 
@@ -442,8 +442,8 @@ int main(){
          0,  1,  0,  4,  0,  8, -2,  8, 
         -1,  0, -1,  0, -1,  0, -1,  0};
 
-    if( verbose_mode == 1){
-        printf("Test #%d: %s\n", test_id, tests[test_id]);
+    if ( verbose_mode == 1){
+        printf( "Test #%d: %s\n", test_id, tests[test_id]);
     }
 
     iresult[0] = byte_find_gap( 0, 1, 0x00, &icount[0]);
@@ -454,7 +454,7 @@ int main(){
     iresult[5] = byte_find_gap( 0, 4, 0xff, &icount[5]);
     iresult[6] = byte_find_gap( 0, 8, 0xff, &icount[6]);
     iresult[7] = byte_find_gap( 0, 12, 0xff, &icount[7]);
-    for( i = 0; i < 8; i++){
+    for ( i = 0; i < 8; i++){
         gap_results[i*2] = iresult[i];
         gap_results[i*2+1] = icount[i];
     }
@@ -470,8 +470,8 @@ int main(){
          4,  1,  4,  4, -2,  4, -2,  4, 
          0,  1,  0,  4, -1,  0, -1,  0};
 
-    if( verbose_mode == 1){
-        printf("Test #%d: %s\n", test_id, tests[test_id]);
+    if ( verbose_mode == 1){
+        printf( "Test #%d: %s\n", test_id, tests[test_id]);
     }
 
     iresult[0] = byte_find_gap( 0, 1, 0x0f, &icount[0]);
@@ -482,7 +482,7 @@ int main(){
     iresult[5] = byte_find_gap( 0, 4, 0xf0, &icount[5]);
     iresult[6] = byte_find_gap( 0, 8, 0xf0, &icount[6]);
     iresult[7] = byte_find_gap( 0, 12, 0xf0, &icount[7]);
-    for( i = 0; i < 8; i++){
+    for ( i = 0; i < 8; i++){
         gap_results[i*2] = iresult[i];
         gap_results[i*2+1] = icount[i];
     }
@@ -498,8 +498,8 @@ int main(){
          1,  1, -2,  1,  1,  1, -2,  1, 
          1,  1,  5,  2,  3,  2,  3,  3};
 
-    if( verbose_mode == 1){
-        printf("Test #%d: %s\n", test_id, tests[test_id]);
+    if ( verbose_mode == 1){
+        printf( "Test #%d: %s\n", test_id, tests[test_id]);
     }
 
     iresult[0] = byte_find_gap( 0, 1, 0x55, &icount[0]);
@@ -510,7 +510,7 @@ int main(){
     iresult[5] = byte_find_gap( 0, 2, 0x95, &icount[5]);
     iresult[6] = byte_find_gap( 0, 2, 0x45, &icount[6]);
     iresult[7] = byte_find_gap( 0, 3, 0x45, &icount[7]);
-    for( i = 0; i < 8; i++){
+    for ( i = 0; i < 8; i++){
         gap_results[i*2] = iresult[i];
         gap_results[i*2+1] = icount[i];
     }
@@ -526,8 +526,8 @@ int main(){
          5,  1, -2,  1,  4,  1,  4,  4, 
         -2,  4, -1,  0, -1,  0, -2,  1};
 
-    if( verbose_mode == 1){
-        printf("Test #%d: %s\n", test_id, tests[test_id]);
+    if ( verbose_mode == 1){
+        printf( "Test #%d: %s\n", test_id, tests[test_id]);
     }
 
     iresult[0] = byte_find_gap( 4, 1, 0x55, &icount[0]);
@@ -538,7 +538,7 @@ int main(){
     iresult[5] = byte_find_gap( 4, 1, 0xff, &icount[5]);
     iresult[6] = byte_find_gap( 4, 4, 0xff, &icount[6]);
     iresult[7] = byte_find_gap( 7, 2, 0x00, &icount[7]);
-    for( i = 0; i < 8; i++){
+    for ( i = 0; i < 8; i++){
         gap_results[i*2] = iresult[i];
         gap_results[i*2+1] = icount[i];
     }
@@ -579,15 +579,15 @@ int main(){
     int i_rs_11[24];
 
     /* fill in expected results with expected map and expected return codes */
-    for( i = 0; i < 16; i++){
+    for ( i = 0; i < 16; i++){
         ie_rs_11[i] = e_rs_11[i];
     }
-    for( i = 0; i < 8; i++){
+    for ( i = 0; i < 8; i++){
         ie_rs_11[i+16] = e_rc_11[i];
     }
 
-    if( verbose_mode == 1){
-        printf("Test #%d: %s\n", test_id, tests[test_id]);
+    if ( verbose_mode == 1){
+        printf( "Test #%d: %s\n", test_id, tests[test_id]);
     }
 
     memset( (void *) &m1, 0, sizeof( m1));
@@ -601,10 +601,10 @@ int main(){
     icount[6] = 63;
     icount[7] = 64;
 
-    for( i = 0; i < 8; i++){
+    for ( i = 0; i < 8; i++){
         i_rs_11[i+16] = bm_set_bit( m1, 64, icount[i], 1);
     }
-    for( i = 0; i < 16; i++){
+    for ( i = 0; i < 16; i++){
         i_rs_11[i] = (int) m1[i];
     }
     show_test_results( test_id, i_rs_11, ie_rs_11, 24, 2);
@@ -629,15 +629,15 @@ int main(){
     int i_rs_12[24];
 
     /* fill in expected results with expected map and expected return codes */
-    for( i = 0; i < 16; i++){
+    for ( i = 0; i < 16; i++){
         ie_rs_12[i] = e_rs_12[i];
     }
-    for( i = 0; i < 8; i++){
+    for ( i = 0; i < 8; i++){
         ie_rs_12[i+16] = e_rc_12[i];
     }
 
-    if( verbose_mode == 1){
-        printf("Test #%d: %s\n", test_id, tests[test_id]);
+    if ( verbose_mode == 1){
+        printf( "Test #%d: %s\n", test_id, tests[test_id]);
     }
 
     memset( (void *) &m1, 0xff, sizeof( m1));
@@ -651,10 +651,10 @@ int main(){
     icount[6] = 63;
     icount[7] = 64;
 
-    for( i = 0; i < 8; i++){
+    for ( i = 0; i < 8; i++){
         i_rs_12[i+16] = bm_set_bit( m1, 64, icount[i], 0);
     }
-    for( i = 0; i < 16; i++){
+    for ( i = 0; i < 16; i++){
         i_rs_12[i] = (int) m1[i];
     }
     show_test_results( test_id, i_rs_12, ie_rs_12, 24, 2);
@@ -699,16 +699,16 @@ int main(){
     int i_rs_13[28];
 
     /* fill in expected results with expected map and expected return codes */
-    for( i = 0; i < 16; i++){
+    for ( i = 0; i < 16; i++){
         ie_rs_13[i] = e_rs_13[i];
     }
-    for( i = 0; i < 12; i++){
+    for ( i = 0; i < 12; i++){
         ie_rs_13[i+16] = e_rc_13[i];
     }
     memset( (void *) &m1, 0, sizeof( m1));
 
-    if( verbose_mode == 1){
-        printf("Test #%d: %s\n", test_id, tests[test_id]);
+    if ( verbose_mode == 1){
+        printf( "Test #%d: %s\n", test_id, tests[test_id]);
     }
 
     ioffset[0] = 0; icount[0] = 1;
@@ -724,7 +724,7 @@ int main(){
     ioffset[10] = 127; icount[10] = 1; 
     ioffset[11] = 128; icount[11] = 1;
 
-    for( i = 0; i < 12; i++){
+    for ( i = 0; i < 12; i++){
         rc = bm_set_extent( m1, 128, ioffset[i], icount[i], 1);
         i_rs_13[i+16] = rc;
 /*        if( rc < 0){
@@ -737,7 +737,7 @@ int main(){
 */
     }
 
-    for( i = 0; i < 16; i++){
+    for ( i = 0; i < 16; i++){
         i_rs_13[i] = (int) m1[i];
     }
     show_test_results( test_id, i_rs_13, ie_rs_13, 28, 3);
@@ -764,18 +764,18 @@ int main(){
     int i_rs_14[28];
 
     /* fill in expected results with expected map and expected return codes */
-    for( i = 0; i < 16; i++){
+    for ( i = 0; i < 16; i++){
         ie_rs_14[i] = e_rs_14[i];
     }
-    for( i = 0; i < 12; i++){
+    for ( i = 0; i < 12; i++){
         ie_rs_14[i+16] = e_rc_14[i];
     }
 
-    if( verbose_mode == 1){
-        printf("Test #%d: %s\n", test_id, tests[test_id]);
+    if ( verbose_mode == 1){
+        printf( "Test #%d: %s\n", test_id, tests[test_id]);
     }
 
-    for( i = 0; i < 12; i++){
+    for ( i = 0; i < 12; i++){
         rc = bm_set_extent( m1, 128, ioffset[i], icount[i], 0);
         i_rs_14[i+16] = rc;
 /*        if( rc < 0){
@@ -788,7 +788,7 @@ int main(){
 */
     }
 
-    for( i = 0; i < 16; i++){
+    for ( i = 0; i < 16; i++){
         i_rs_14[i] = (int) m1[i];
     }
     show_test_results( test_id, i_rs_14, ie_rs_14, 28, 3);
@@ -828,8 +828,8 @@ int main(){
 
     int i_r_15[18];
 
-    if( verbose_mode == 1){
-        printf("Test #%d: %s\n", test_id, tests[test_id]);
+    if ( verbose_mode == 1){
+        printf( "Test #%d: %s\n", test_id, tests[test_id]);
     }
 
     ioffset[0] = 0;  icount[0] = 8;
@@ -842,7 +842,7 @@ int main(){
     ioffset[7] = 80; icount[7] = 40;
     ioffset[8] = 120; icount[8] = 100;
 
-    for( i = 0; i < 9; i++){
+    for ( i = 0; i < 9; i++){
         rc = bm_count( m15, 160, ioffset[i], icount[i], 0, &count_result[i]);
 /*        if( rc < 0){
             printf("Error, location=%d + extent=%d outside map size=%d\n",
@@ -877,8 +877,8 @@ int main(){
 
     int i_r_16[20];
 
-    if( verbose_mode == 1){
-        printf("Test #%d: %s\n", test_id, tests[test_id]);
+    if ( verbose_mode == 1){
+        printf( "Test #%d: %s\n", test_id, tests[test_id]);
     }
 
                                        /* expected : */
@@ -893,7 +893,7 @@ int main(){
     ioffset[8] = 121; icount[8] = 100;  /* -1 0 */
     ioffset[9] = 27;  icount[9] = 5;     /* 0 5 */
 
-    for( i = 0; i < 10; i++){
+    for ( i = 0; i < 10; i++){
         rc = bm_count( m16, 160, 
                        ioffset[i], icount[i], 
                        0, &count_result[i]);
@@ -957,8 +957,8 @@ int main(){
 
     int i_rc_17[16];
 
-    if( verbose_mode == 1){
-        printf("Test #%d: %s\n", test_id, tests[test_id]);
+    if ( verbose_mode == 1){
+        printf( "Test #%d: %s\n", test_id, tests[test_id]);
     }
 
     ioffset[0] = 0;  icount[0] = 8;   igap[0] = 1; 
@@ -979,14 +979,14 @@ int main(){
     ioffset[15] = 2; icount[15] = 64; igap[15] = 22;
 
 
-    for( i = 0; i < 16; i++){
+    for ( i = 0; i < 16; i++){
         rc = bm_find( m17, 128, ioffset[i], icount[i], igap[i], &addr[i]);
 /*        printf( "Case #%d, expected values = [%d %lu], got: [%d %lu] ", 
                 i ,erc[i], eaddr[i], rc, addr[i]);
 
         if( (rc == erc[i]) && ( eaddr[i] == addr[i] )){
             printf("OK");
-        }else{
+        } else {
             printf("ERROR");
         }
         printf("\n");
@@ -1018,8 +1018,8 @@ int main(){
 
     int i_rc_18[12];
 
-    if( verbose_mode == 1){
-        printf("Test #%d: %s\n", test_id, tests[test_id]);
+    if ( verbose_mode == 1){
+        printf( "Test #%d: %s\n", test_id, tests[test_id]);
     }
 
 
@@ -1036,14 +1036,14 @@ int main(){
     ioffset[10] = 120; icount[10] = 64; igap[10] = 8;
     ioffset[11] = 120; icount[11] = 64; igap[11] = 12;
 
-    for( i = 0; i < 12; i++){
+    for ( i = 0; i < 12; i++){
         rc = bm_find( m18, 128, ioffset[i], icount[i], igap[i], &addr[i]);
 /*        printf( "Case #%d, expected values = [%d %lu], got: [%d %lu] ",
                 i ,i_erc_18[i], i_eaddr_18[i], rc, addr[i]);
 
         if( (rc == i_erc_18[i]) && ( i_eaddr_18[i] == addr[i] )){
             printf("OK");
-        }else{
+        } else {
             printf("ERROR");
         }
         printf("\n");*/
@@ -1091,8 +1091,8 @@ int main(){
                         0,  0, -2,  0,  0,  0,  0,  0 };
 
     int i_rc_19[15];
-    if( verbose_mode == 1){
-        printf("Test #%d: %s\n", test_id, tests[test_id]);
+    if ( verbose_mode == 1){
+        printf( "Test #%d: %s\n", test_id, tests[test_id]);
     }
    
     ioffset[0] = 0;    icount[0] = 0; 
@@ -1112,7 +1112,7 @@ int main(){
     ioffset[14] = 40;  icount[14] = 15;
     ioffset[15] = 40;  icount[15] = 16;
     
-    for( i = 0; i < 16; i++){
+    for ( i = 0; i < 16; i++){
         rc = bm_extent_can_grow( m19, 128, ioffset[i], icount[i]);
         i_rc_19[i] = rc;
         /*
@@ -1121,7 +1121,7 @@ int main(){
 
         if( rc == erc[i]){
             printf("OK");
-        }else{
+        } else {
             printf("ERROR");
         }
         printf("\n");
@@ -1150,8 +1150,8 @@ int main(){
     int i_rc_20[15];
     int overall = 0;
 
-    if( verbose_mode == 1){
-        printf("Test #%d: %s\n", test_id, tests[test_id]);
+    if ( verbose_mode == 1){
+        printf( "Test #%d: %s\n", test_id, tests[test_id]);
     }
    
     ioffset[0] = 24;   icount[0] = 48;
@@ -1167,7 +1167,7 @@ int main(){
     ioffset[10] = 16;  icount[10] = 16;
     ioffset[11] = 17;  icount[11] = 16;
 
-    for( i = 0; i < 16; i++){
+    for ( i = 0; i < 16; i++){
         rc = bm_extent_can_grow( m20, 128, ioffset[i], icount[i]);
         i_rc_20[i] = rc;
         /*
@@ -1176,7 +1176,7 @@ int main(){
 
         if( rc == erc[i]){
             printf("OK");
-        }else{
+        } else {
             printf("ERROR");
         }
         printf("\n");
@@ -1192,8 +1192,8 @@ int main(){
      * GetBits in byte #1 
      */
     int e_results_11[8] = { 1, 0, 0, 1, 0, 1, 0, 1 };
-    if( verbose_mode == 1){
-        printf("Test #%d: %s\n", test_id, tests[test_id]);
+    if ( verbose_mode == 1){
+        printf( "Test #%d: %s\n", test_id, tests[test_id]);
     }
 
 
@@ -1206,7 +1206,7 @@ int main(){
     bresult[6] = byte_get_bit( 0xaa, 6);
     bresult[7] = byte_get_bit( 0xff, 7);
 
-    for( i = 0; i < 8; i++){
+    for ( i = 0; i < 8; i++){
         a_results[i] = (int) bresult[i];
     }
 
@@ -1237,11 +1237,11 @@ int main(){
 
     int rs_21[16];
 
-    if( verbose_mode == 1){
-        printf("Test #%d: %s\n", test_id, tests[test_id]);
+    if ( verbose_mode == 1){
+        printf( "Test #%d: %s\n", test_id, tests[test_id]);
     }
 
-    for( i = 0; i < 16; i++){
+    for ( i = 0; i < 16; i++){
         rs_21[i] = bm_get_bit( m_21, 128, bl_21[i]);
     }
 
@@ -1252,13 +1252,13 @@ int main(){
     /******************************************************************
      * GLOBAL RESULTS 
      */
-    printf("GLOBAL RESULTS\n");
-    printf("Test #, Test Name, Result, NumResult ( success=0)\n");
-    for( i = 0; i < test_id; i++){
-        printf("%d, %s, %s, %d\n", 
+    printf( "GLOBAL RESULTS\n");
+    printf( "Test #, Test Name, Result, NumResult ( success=0)\n");
+    for ( i = 0; i < test_id; i++){
+        printf( "%d, %s, %s, %d\n", 
                 i, tests[i], 
                 ( global_results[i] ? "FAIL" : "PASSED" ),
-                global_results[i] );
+                global_results[i]);
         overall += global_results[i];
     }
 
@@ -1268,7 +1268,7 @@ int main(){
             overall ? "FAIL" : "PASSED", 
             overall);
 
-    return(0);
+    return( 0);
 }
 
 
