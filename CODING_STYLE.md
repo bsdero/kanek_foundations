@@ -1,7 +1,7 @@
 # Coding Style — Kanek Foundation Library (KFL)
 
 This document records binding style rules for C code in this repository,
-beyond what is already covered in `CLAUDE.md`. When the two disagree,
+beyond what is already covered in `AGENTS.md`. When the two disagree,
 this file wins for the topics it covers.
 
 ## Rule 1 — Every control-flow body uses braces, on its own line
@@ -250,6 +250,6 @@ Empty-argument calls have no space either way: `dict_new()`.
 - Rules 6-13 were inferred from the author's established style in the
   companion `kanekfs` repository (github.com/bsdero/kanekfs), which
   this library's code is written to be consistent with.
-- Everything else in `CLAUDE.md`'s "Coding Conventions" section
+- Everything else in `AGENTS.md`'s "Coding Conventions" section
   (header guard naming, `USER_SPACE` portability guards, `container_of`
   usage, etc.) is unchanged by this document.

@@ -91,7 +91,7 @@ uint64_t hash_b79( char *s){
 
     for ( i = 0; i < 10; i++) {
         if ( i < l) {
-            c = s[i];
+            c = (unsigned char)s[i];
             cc = ascii_2_mx79( c);
         } else {
             cc = 0;
