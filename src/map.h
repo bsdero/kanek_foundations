@@ -10,6 +10,15 @@
 #endif
 
 
+/*
+ * Concurrency note: none of the bm_* / byte_* functions below do any
+ * locking, and their read-modify-write on bm[] bytes is not atomic.
+ * This is intentional — bitmap synchronization (e.g. serializing a
+ * bm_find() + bm_set_extent()/bm_set_bit() claim pair, or guarding
+ * concurrent writers to the same bm buffer) is the responsibility of
+ * the upper layer (KFS block/inode allocation code), not this library.
+ */
+
 #define CLEARBIT                                   0
 #define SETBIT                                     1
 

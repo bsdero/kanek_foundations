@@ -51,6 +51,9 @@ There is no install target — consumers link `libkfl.a` directly.
   resolves function names in `panic.c`
 - `-fsanitize=address` / `-static-libasan` can be added to `CFLAGS`/`LDFLAGS`
   for AddressSanitizer runs (see comment at top of `Makefile`)
+- `make tsan` builds `testrand.c`+`krand64.c` with
+  `-fsanitize=thread` and runs the result (`testrand_tsan`) — use this to
+  check the PRNG's thread-safety/contention tests for data races
 - `crc32c.o` is built with `-msse4.2` automatically when the compiler
   supports it (detected via a Makefile probe); falls back to the portable
   path otherwise

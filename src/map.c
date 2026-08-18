@@ -1,6 +1,13 @@
 #include "map.h"
 #include "trace.h"
 #ifndef USER_SPACE
+/*
+ * trace_level/trace_mask are kernel-space tracing hooks: real Linux
+ * kernel symbols usable at kernel level, declared here so this file
+ * builds against them, but they are not defined/wired up anywhere in
+ * KFL yet — kernel-space trace integration is not implemented in this
+ * library. Currently unreferenced in this file.
+ */
 extern unsigned int trace_level;
 extern unsigned int trace_mask;
 #endif
@@ -14,6 +21,10 @@ unsigned char byte_set_bits( int start,
                              int clear_or_set){
     int to = start + numbits; /* which bit to stop */
     uint8_t mask = 0x00;
+
+    if ( numbits <= 0) {
+        return( byte);
+    }
 
     if ( to > 8) {
         to = 8;
@@ -52,6 +63,10 @@ int byte_count_bits( int start, int numbits, unsigned char byte,
     int to = start + numbits; /* which bit to stop */
     uint8_t mask = 0x00;
     int count = 0;
+
+    if ( numbits <= 0) {
+        return( 0);
+    }
 
     if ( to > 8) {
         to = 8;
@@ -94,6 +109,10 @@ int byte_find_gap( int start, int numbits, unsigned char byte, int *count){
     int gap_index = start;
 
     *count = 0;
+
+    if ( numbits <= 0) {
+        return( -1);
+    }
 
     while ( start < 8) {
         mask = (0x01 << start++);
@@ -208,10 +227,14 @@ int bm_set_extent( unsigned char *bm,
     uint64_t extra_bits_to_mark;
     int aligned_to_byte;
 
-    if ( (bit_address > total_bits) ||
+    if ( (bit_address >= total_bits) ||
         (bit_address + num_bits_to_set) > total_bits) {
         TRACE_ERR( "bit_address/num_bits_to_set out of range");
         return( -1);
+    }
+
+    if ( num_bits_to_set == 0) {
+        return( 0);
     }
 
     /* if only need to mark one bit, call bm_set_bit */
@@ -331,6 +354,10 @@ int bm_count( unsigned char *bm,
         return( -1);
     }
 
+    if ( num_bits_to_count == 0) {
+        return( 0);
+    }
+
     bits_count = 0;
     location_in_map = bit_address / 8;
 
@@ -414,6 +441,7 @@ int bm_find( unsigned char *bm,
 
     uint64_t location_in_map = bit_address / 8;
     uint64_t bit_offset, updated_gap_size;
+    uint64_t window_end;
     uint8_t byte;
     int rc, bit_count;
     int aligned_to_byte = bit_address & 0x07;
@@ -433,6 +461,15 @@ int bm_find( unsigned char *bm,
         count = total_bits - bit_address;
     }
 
+    /*
+     * window_end is the exclusive upper bound of the caller's search
+     * window: the whole gap_size run must fit within
+     * [bit_address, window_end). Captured once here because count
+     * below is consumed as a byte-granular scan budget and no longer
+     * reflects the original window after the loop starts.
+     */
+    window_end = bit_address + count;
+
     updated_gap_size = gap_size;
 
     do {
@@ -441,6 +478,37 @@ int bm_find( unsigned char *bm,
                             updated_gap_size,
                             byte,
                             &bit_count);
+
+        /*
+         * A pending large-gap continuation (may_have_a_large_gap==1)
+         * is only genuine if the matching run in this byte starts
+         * exactly at bit 0 and is unbroken:
+         *   - rc == 0                                : run completed
+         *     within this byte, starting at bit 0.
+         *   - rc == -2 and bit_count == 8-aligned_to_byte : run spans
+         *     the whole remaining byte with no interruption.
+         * Any other outcome means a set bit interrupted the run
+         * before the target was reached, so the previous bytes'
+         * trailing zeros cannot be extended through this byte.
+         * Without this check, a run found anywhere later in the byte
+         * (after some set bits) would be wrongly accepted as
+         * continuing the gap, which can report a "free" extent that
+         * actually contains set bits. Abandon the stale candidate
+         * and re-scan this same byte as a fresh search (target
+         * gap_size, not the partially-consumed updated_gap_size).
+         * rc == -1 is excluded: it already resets the continuation
+         * state unconditionally below, so no re-scan is needed.
+         */
+        if ( may_have_a_large_gap == 1 && rc != -1 &&
+            !( (rc == 0) ||
+               (rc == -2 && bit_count == (8 - aligned_to_byte)) )) {
+            may_have_a_large_gap = 0;
+            updated_gap_size = gap_size;
+            rc = byte_find_gap( aligned_to_byte,
+                                updated_gap_size,
+                                byte,
+                                &bit_count);
+        }
 
         if ( (8 - aligned_to_byte) > count) {
             count = 0;
@@ -452,10 +520,26 @@ int bm_find( unsigned char *bm,
             if ( may_have_a_large_gap == 0) {
                 bit_offset = rc;
                 *found_address = (location_in_map * 8) + bit_offset;
+                /*
+                 * The scan is strictly left-to-right and returns the
+                 * first qualifying run, so this is the leftmost
+                 * possible match. If it doesn't fit entirely inside
+                 * the caller's window, no later match would either —
+                 * fail now rather than report a gap that spills past
+                 * bit_address + count.
+                 */
+                if ( *found_address + gap_size > window_end) {
+                    *found_address = 0;
+                    return( -1);
+                }
                 return( 0);
             } else {
                 updated_gap_size -= bit_count;
                 if ( updated_gap_size == 0) {
+                    if ( *found_address + gap_size > window_end) {
+                        *found_address = 0;
+                        return( -1);
+                    }
                     return( 0);
                 }
             }
