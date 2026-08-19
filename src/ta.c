@@ -48,7 +48,12 @@ void *ta_malloc( ta_list_t *ll, size_t size){
 }
 
 void ta_free( void *p){
-    ta_node_t *node = container_of( p, ta_node_t, data);
+    ta_node_t *node;
+
+    if ( p == NULL) {
+        return;
+    }
+    node = container_of( p, ta_node_t, data);
     list_del( LIST( node));
     free( node);
 }

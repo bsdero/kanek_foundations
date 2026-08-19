@@ -50,7 +50,11 @@ There is no install target — consumers link `libkfl.a` directly.
 - `-rdynamic` is included in test binary links so `backtrace_symbols()`
   resolves function names in `panic.c`
 - `-fsanitize=address` / `-static-libasan` can be added to `CFLAGS`/`LDFLAGS`
-  for AddressSanitizer runs (see comment at top of `Makefile`)
+  for AddressSanitizer runs (see comment at top of `Makefile`), or run
+  `make asan-tests`, which builds+runs the full suite under ASan and
+  then restores a normal build — use this after any change to `ta.c`,
+  `dict.c`, or `var.c`, since a plain build won't reliably catch
+  use-after-free/double-free bugs
 - `make tsan` builds `testrand.c`+`krand64.c` with
   `-fsanitize=thread` and runs the result (`testrand_tsan`) — use this to
   check the PRNG's thread-safety/contention tests for data races
@@ -109,7 +113,11 @@ list.h  ─┬─> ta.h ─┬─> var.h ─┬─> dict.h ─> cfg_parser.h
 - `dict_t` (`dict.h`) is a Python-style string-keyed hash map of `var_t *`,
   bucketed with `xxh32` (from `hash.h`); default 64 buckets
   (`dict_new`), or a caller-chosen power-of-2 bucket count via
-  `dict_new_sized()` for known load factors.
+  `dict_new_sized()` for known load factors. `dict_set()`/
+  `dict_set_owned()` auto-rehash (double the bucket count) once load
+  factor crosses ~0.75; `dict_set_owned()` additionally frees the
+  previous value on key overwrite, so only use it where that value is
+  guaranteed unreferenced elsewhere — `dict_set()` is the safe default.
 - `cfg_parser.h`/`cfg_parser.c` parses config files into a `kfl_cfg_t`
   (a `dict_t` of `var_t`), supporting `#` comments, arrays, variable
   references, `+`/`+=` string concatenation, `include`, and `display`

@@ -209,8 +209,6 @@ char *var_to_str( ta_list_t *gc, var_t *v){
 
 /* ── display (depth-limited to prevent infinite recursion) ─────────────── */
 
-static void dict_print_depth( dict_t *d, int depth);
-
 static void var_print_depth( var_t *v, int depth){
     size_t i;
 
@@ -254,7 +252,7 @@ static void var_print_depth( var_t *v, int depth){
     }
 }
 
-static void dict_print_depth( dict_t *d, int depth){
+void dict_print_depth( dict_t *d, int depth){
     int i, first = 1;
     list_t *pos;
 

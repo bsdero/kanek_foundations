@@ -202,6 +202,7 @@ user-data area; the TA bookkeeping header is hidden before it.
 #### `void ta_free(void *p)`
 Frees a single TA-tracked allocation `p` (obtained from any of the `ta_*`
 allocation functions).  Unlinks `p` from its tracked allocator list.
+If `p` is `NULL`, this is a no-op.
 
 #### `void *ta_realloc(ta_list_t *ll, void *ptr, size_t size)`
 Resizes a TA-tracked allocation.  The old node is unlinked before the `realloc`
@@ -563,6 +564,23 @@ below 0.7 for good performance.
 - **Returns** the new `dict_t`, or `NULL` on allocation failure or if
   `bucket_count` is not a power of 2, or if `bucket_count < 4`.
 
+#### `int dict_rehash(dict_t *d, uint32_t new_nbuckets)`
+Resizes `d`'s bucket table to `new_nbuckets` and re-distributes all
+existing entries into it.  `new_nbuckets` must be a power of 2 and >= 4
+(same constraint as `dict_new_sized()`).  On success, `d->buckets` and
+`d->nbuckets` are updated in place and the old bucket array is freed.
+On failure (invalid `new_nbuckets`, or allocation failure), `d` is left
+completely unmodified — it is always safe to keep using `d` with its
+old table after a failed rehash.
+
+You normally don't need to call this directly — `dict_set()` and
+`dict_set_owned()` call it automatically when the load factor crosses
+~0.75.  It's exposed for callers who want to pre-size a dict at a
+specific growth point.
+
+- **Returns** `0` on success, `-1` on error (`d` is `NULL`,
+  `new_nbuckets` is invalid, or allocation failure).
+
 #### `var_t *var_dict_new(ta_list_t *gc)`
 Creates a `VAR_DICT` variable wrapping a new `dict_t`.  Convenient when a
 dictionary needs to be stored as a `var_t` value (e.g. inside another dict
@@ -581,6 +599,20 @@ duplicated internally.
 
 - **Returns** `0` on success, `-1` if `d` or `key` is `NULL` or on
   allocation failure.
+
+#### `int dict_set_owned(dict_t *d, const char *key, var_t *val)`
+Like `dict_set()`, but if `key` already exists, its previous value
+**is** freed via `ta_free()` before being replaced.
+
+Only use this at a call site where you can be certain the value being
+replaced is not referenced anywhere else (not stored under another
+key, not pushed into an array, not held by a caller that expects to
+keep using it).  If that's not certain, use `dict_set()` instead and
+let the old value live until the `gc` context is torn down — a
+bounded, harmless cost — rather than risk a use-after-free.
+
+- **Returns** `0` on success, `-1` on error (same conditions as
+  `dict_set()`).
 
 #### `var_t *dict_get(dict_t *d, const char *key)`
 Returns the value stored for `key`, or `NULL` if the key does not exist.

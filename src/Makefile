@@ -1,6 +1,9 @@
-# To enable AddressSanitizer, add to both CFLAGS and LDFLAGS:
+# To enable AddressSanitizer manually, add to both CFLAGS and LDFLAGS:
 #   CFLAGS  += -fsanitize=address
 #   LDFLAGS += -fsanitize=address -static-libasan
+# Or just run `make asan-tests`, which does this for you, runs the
+# full test suite under it, then restores a normal (non-sanitized)
+# build.
 
 CC      = cc
 AR      = ar
@@ -38,6 +41,18 @@ runtests: tests
 	@echo "--- testutils ---";  ./testutils
 	@echo "--- testcrc32c ---"; ./testcrc32c
 	@echo "--- testdict ---";   ./testdict
+
+# Build and run the full test suite under AddressSanitizer, then
+# restore a normal (non-sanitized) build. Run this as part of
+# verifying any change to ta.c, dict.c, or var.c — a plain build will
+# not reliably catch use-after-free / double-free bugs.
+asan-tests:
+	$(MAKE) clean
+	$(MAKE) CFLAGS="-Wall -DUSER_SPACE -g -O0 -fsanitize=address" \
+	        LDFLAGS="-L. -lkfl -rdynamic -lpthread -fsanitize=address -static-libasan" \
+	        runtests
+	$(MAKE) clean
+	$(MAKE) tests
 
 # test binaries
 testrand: testrand.o $(LIBKFL)

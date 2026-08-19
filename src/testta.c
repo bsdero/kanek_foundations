@@ -26,6 +26,11 @@ int main( void){
     printf( "=== Basic allocation and tracking ===\n");
 
     ta_list_init( &ta);
+
+    printf( "=== ta_free(NULL) safety ===\n");
+    ta_free( NULL);
+    CHECK( 1, "ta_free(NULL) does not crash");
+
     p = ta_malloc( &ta, 32);
 
     memset( p, 'a', 32);

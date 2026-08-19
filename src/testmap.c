@@ -1090,7 +1090,7 @@ int main(){
     int i_erc_19[] = { -1, -3,  0,  0, -5, -3, -3,  0, 
                         0,  0, -2,  0,  0,  0,  0,  0 };
 
-    int i_rc_19[15];
+    int i_rc_19[16];
     if ( verbose_mode == 1){
         printf( "Test #%d: %s\n", test_id, tests[test_id]);
     }
@@ -1167,7 +1167,7 @@ int main(){
     ioffset[10] = 16;  icount[10] = 16;
     ioffset[11] = 17;  icount[11] = 16;
 
-    for ( i = 0; i < 16; i++){
+    for ( i = 0; i < 12; i++){
         rc = bm_extent_can_grow( m20, 128, ioffset[i], icount[i]);
         i_rc_20[i] = rc;
         /*
