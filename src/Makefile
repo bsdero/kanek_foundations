@@ -9,6 +9,11 @@ CC      = cc
 AR      = ar
 CFLAGS  = -Wall -DUSER_SPACE -g -O0
 
+# Platform detection: macOS's clang/ld lack a couple of GNU/Linux-only
+# knobs used below (a static ASan runtime, and the `setarch` tool), so
+# asan-tests/tsan adapt per-OS.
+UNAME_S := $(shell uname -s)
+
 LIBKFL  = libkfl.a
 # -rdynamic exports all symbols to the dynamic symbol table so that
 # backtrace_symbols() in panic.c can resolve function names at runtime.
@@ -46,10 +51,19 @@ runtests: tests
 # restore a normal (non-sanitized) build. Run this as part of
 # verifying any change to ta.c, dict.c, or var.c — a plain build will
 # not reliably catch use-after-free / double-free bugs.
+#
+# -static-libasan links ASan's runtime statically; macOS's clang only
+# ships a dynamic ASan runtime (dylib), so that flag is Linux-only.
+ifeq ($(UNAME_S),Darwin)
+ASAN_LDFLAGS = -L. -lkfl -rdynamic -lpthread -fsanitize=address
+else
+ASAN_LDFLAGS = -L. -lkfl -rdynamic -lpthread -fsanitize=address -static-libasan
+endif
+
 asan-tests:
 	$(MAKE) clean
 	$(MAKE) CFLAGS="-Wall -DUSER_SPACE -g -O0 -fsanitize=address" \
-	        LDFLAGS="-L. -lkfl -rdynamic -lpthread -fsanitize=address -static-libasan" \
+	        LDFLAGS="$(ASAN_LDFLAGS)" \
 	        runtests
 	$(MAKE) clean
 	$(MAKE) tests
@@ -100,10 +114,17 @@ crc32c.o: crc32c.c
 	$(CC) $(CFLAGS) -msse4.2 -c -o $@ $<
 endif
 
+# `setarch -R` disables ASLR, which is util-linux/Linux-only tooling
+# with no macOS equivalent; TSan's own address layout doesn't need it
+# there, so just run the binary directly on Darwin.
 tsan: testrand.c krand64.c
 	$(CC) $(CFLAGS) -fsanitize=thread -o testrand_tsan \
 	    testrand.c krand64.c -lpthread
+ifeq ($(UNAME_S),Darwin)
+	./testrand_tsan
+else
 	setarch $$(uname -m) -R ./testrand_tsan
+endif
 
 clean:
 	rm -f *.o $(TESTS) $(LIBKFL) testrand_tsan

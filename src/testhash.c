@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdint.h>
+#include <inttypes.h>
 #include "hash.h"
 
 
@@ -22,7 +23,8 @@ int main(){
         h2 = xxh64( s, strlen( s), 1);
         h3 = xxh32( s, strlen( s), 1);
 
-        printf( "0x%016lx : 0x%016lx : 0x%08x\n", h1, h2, h3);
+        printf( "0x%016" PRIx64 " : 0x%016" PRIx64 " : 0x%08x\n",
+               h1, h2, h3);
     }while ( 1);
 
     return( 0);

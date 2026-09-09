@@ -1,4 +1,5 @@
 #include <stdint.h>
+#include <inttypes.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -55,13 +56,13 @@ int show_findgap_test_results( int test_id,
 
     printf( "Expected : ");
     for ( i = 0; i < num_of_results; i+=2){
-        printf( "[%d %lu] ", ercs[i], eaddr[i]);
+        printf( "[%d %" PRIu64 "] ", ercs[i], eaddr[i]);
     }
     printf( "\n");
 
     printf( "Got :      ");
     for ( i = 0; i < num_of_results; i+=2){
-         printf( "[%d %lu] ", rcs[i], addr[i]);
+         printf( "[%d %" PRIu64 "] ", rcs[i], addr[i]);
     }
     printf( "\n");
 
@@ -71,7 +72,7 @@ int show_findgap_test_results( int test_id,
         } else {
             num_of_fails++;
             printf( "Fail in Case #%d : ", i);
-            printf( "got=[%d, %lu], expected=[%d, %lu]\n", 
+            printf( "got=[%d, %" PRIu64 "], expected=[%d, %" PRIu64 "]\n",
                     rcs[i], addr[i], ercs[i], eaddr[i]);
         }
     }

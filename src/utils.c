@@ -23,8 +23,9 @@ char *trim( char *s){
       s1++;
   }
 
-  /* Copy finished string */
-  strcpy (s, s1);
+  /* Copy finished string. s1 may point inside s (left-trim), so the
+   * regions can overlap; memmove() is required instead of strcpy(). */
+  memmove( s, s1, strlen( s1) + 1);
   return( s);
 }
 
